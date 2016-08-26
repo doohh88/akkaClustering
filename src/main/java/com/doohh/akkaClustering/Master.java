@@ -32,7 +32,8 @@ public class Master {
 		log.info("hostname : " + conf.getString("akka.remote.netty.tcp.hostname"));
 		log.info("hostport : " + conf.getString("akka.remote.netty.tcp.port"));
 		log.info("seed-nodes : " + conf.getList("akka.cluster.seed-nodes"));
-		
+
         ActorSystem actorSystem = ActorSystem.create(systemName, conf);
+        
 	}
 }
