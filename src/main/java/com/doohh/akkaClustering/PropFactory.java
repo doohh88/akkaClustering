@@ -7,6 +7,8 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.doohh.akkaClustering.master.MasterMain;
+
 public class PropFactory {
 	Logger log = LoggerFactory.getLogger(PropFactory.class);
 
@@ -58,7 +60,7 @@ public class PropFactory {
 	public String getSeedConf(String role) {
 		setSeedList(role);
 		String seedNodes = "[";
-		String pad = "\"akka.tcp://" + Master.systemName + "@";
+		String pad = "\"akka.tcp://" + MasterMain.systemName + "@";
 		for (String s : seedList) {
 			seedNodes += pad + s + ":" + 2551 + "\", ";
 		}

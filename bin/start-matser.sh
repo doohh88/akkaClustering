@@ -14,5 +14,5 @@ if [ "$DISTDEEP_MASTER_HOST" = "" ]; then
 fi
 #echo "DISTDEEP_MASTER_HOST = $DISTDEEP_MASTER_HOST"
 
-CLASS="com.doohh.akkaClustering.Master"
+CLASS="com.doohh.akkaClustering.master.MasterMain"
 java -cp $DISTDEEP_HOME/jars/distDeep-core-0.0.1.jar $CLASS $DISTDEEP_MASTER_HOST
