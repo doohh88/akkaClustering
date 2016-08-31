@@ -4,5 +4,5 @@ if [ -z "${DISTDEEP_HOME}" ]; then
 fi
 #echo "DISTDEEP_HOME = $DISTDEEP_HOME"
 
-CLASS="com.doohh.akkaClustering.submit.SubmitMain"
-java -cp $DISTDEEP_HOME/jars/distDeep-core-0.0.1.jar $CLASS
+CLASS="com.doohh.akkaClustering.deploy.SubmitMain"
+java -cp $DISTDEEP_HOME/jars/distDeep-core-0.0.1.jar $CLASS $@

@@ -3,6 +3,7 @@ package com.doohh.akkaClustering.master;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.doohh.akkaClustering.deploy.UserAppConf;
 import com.doohh.akkaClustering.worker.Worker;
 
 import akka.actor.ActorRef;
@@ -29,25 +30,36 @@ public class Master extends UntypedActor {
 	@Override
 	public void postStop() {
 		cluster.unsubscribe(getSelf());
+
 	}
 
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		// TODO Auto-generated method stub
-		if (message.equals(Worker.WORKER_REGISTRATION)) {
+		if(message instanceof String){
+			String msg = (String)message;
+			log.info("get message : {}", msg);
+		} else if (message.equals(Worker.WORKER_REGISTRATION)) {
 			getContext().watch(getSender());
 			workers.add(getSender());
 			log.info("worker list = {}", workers.toString());
 		} else if (message instanceof MemberUp) {
 			MemberUp mUp = (MemberUp) message;
 			register(mUp.member());
+		} else if(message instanceof UserAppConf){
+			System.out.println("get from remote!!!!!!!!!!!!!!");
+			UserAppConf userAppConf = (UserAppConf)message;
+			System.out.println(userAppConf.getPackagePath());
+			System.out.println(userAppConf.getMainClass());
 		} else {
 			unhandled(message);
 		}
 	}
 
 	void register(Member member) {
-		if (member.hasRole("worker"))
+		if (member.hasRole("worker")) {
 			getContext().actorSelection(member.address() + "/user/worker").tell(MASTER_REGISTRATION, getSelf());
+			log.info("worker(member.address()) : {}", member.address());
+		}
 	}
 }
