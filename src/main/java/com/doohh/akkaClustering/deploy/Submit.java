@@ -33,8 +33,8 @@ public class Submit extends UntypedActor {
 	public void onReceive(Object message) throws Throwable {
 			if(message instanceof UserAppConf){
 				UserAppConf userAppConf = (UserAppConf)message;
-				System.out.println(userAppConf.getPackagePath());
-				System.out.println(userAppConf.getMainClass());
+//				System.out.println(userAppConf.getPackagePath());
+//				System.out.println(userAppConf.getMainClass());
 				Future<Object> future = Patterns.ask(master, userAppConf, timeout);
 				
 	            future.onSuccess(new SaySuccess<Object>(), ec);

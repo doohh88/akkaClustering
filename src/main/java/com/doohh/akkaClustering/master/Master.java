@@ -19,7 +19,8 @@ public class Master extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	Cluster cluster = Cluster.get(getContext().system());
 	List<ActorRef> workers = new ArrayList<ActorRef>();
-
+	UserAppConf userAppConf = null;
+	
 	// subscribe to cluster changes, MemberUp
 	@Override
 	public void preStart() {
@@ -47,10 +48,8 @@ public class Master extends UntypedActor {
 			MemberUp mUp = (MemberUp) message;
 			register(mUp.member());
 		} else if(message instanceof UserAppConf){
-			System.out.println("get from remote!!!!!!!!!!!!!!");
-			UserAppConf userAppConf = (UserAppConf)message;
-			System.out.println(userAppConf.getPackagePath());
-			System.out.println(userAppConf.getMainClass());
+			userAppConf = (UserAppConf)message;
+			log.info("get userAppConf({}, {})", userAppConf.getPackagePath(), userAppConf.getMainClass());
 		} else {
 			unhandled(message);
 		}

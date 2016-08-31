@@ -3,7 +3,7 @@ package com.doohh.akkaClustering.master;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.doohh.akkaClustering.PropFactory;
+import com.doohh.akkaClustering.util.PropFactory;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 

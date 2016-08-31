@@ -1,4 +1,4 @@
-package com.doohh.akkaClustering;
+package com.doohh.akkaClustering.util;
 
 import java.io.File;
 import java.io.FileInputStream;
