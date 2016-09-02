@@ -20,13 +20,14 @@ public class SubmitCli {
 	private String mainClass = null;
 	private String packagePath = null;
 	private UserAppConf userAppConf = null;
+	private String masterIP = null;
 	
 	public SubmitCli(String[] args) {
 		this.args = args;
-
 		options.addOption("h", "help", false, "show help.");
 		options.addOption("j", "jar", true, "Here you can set jar package.");
 		options.addOption("c", "class", true, "Here you can set main class.");
+		options.addOption("m", "master", true, "Here you can set masterIP.");
 		
 		parse();
 	}
@@ -52,13 +53,19 @@ public class SubmitCli {
 			} else {
 				help();
 			}
+			
+			if (cmd.hasOption("m")) {
+				masterIP = cmd.getOptionValue("m");
+			} else {
+				masterIP = "127.0.0.1";
+			}
 
 		} catch (ParseException e) {
 
 			help();
 		}
 		
-		userAppConf = new UserAppConf(packagePath, mainClass);
+		userAppConf = new UserAppConf(masterIP, packagePath, mainClass);
 	}
 
 	private void help() {

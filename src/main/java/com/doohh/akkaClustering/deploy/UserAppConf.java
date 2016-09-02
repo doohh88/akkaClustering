@@ -9,6 +9,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class UserAppConf implements Serializable{
+	String masterIP;
 	String packagePath;
-	String mainClass;	
+	String mainClass;
 }
