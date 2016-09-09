@@ -2,7 +2,8 @@ package com.doohh.akkaClustering.worker;
 
 import java.util.HashMap;
 
-import com.doohh.akkaClustering.deploy.Launcher;
+import org.nd4j.linalg.dataset.DataSet;
+
 import com.doohh.akkaClustering.deploy.UserAppConf;
 import com.doohh.akkaClustering.master.Master;
 
@@ -23,7 +24,7 @@ public class Worker extends UntypedActor {
 	Cluster cluster = Cluster.get(getContext().system());
 	HashMap<Address, ActorRef> masters = new HashMap<Address, ActorRef>();
 	UserAppConf userAppConf;
-	
+
 	// subscribe to cluster changes, MemberUp
 	@Override
 	public void preStart() {
@@ -45,7 +46,13 @@ public class Worker extends UntypedActor {
 		} else if (message instanceof MemberUp) {
 			MemberUp mUp = (MemberUp) message;
 			register(mUp.member());
-		} else if (message instanceof String) {
+		}
+
+		else if (message instanceof DataSet) {
+			log.info("{}", (DataSet) message);
+		}
+
+		else if (message instanceof String) {
 			log.info("Get message = {}", (String) message);
 		} else {
 			unhandled(message);

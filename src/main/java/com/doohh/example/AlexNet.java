@@ -9,6 +9,7 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
+
 /**
  * AlexNet
  *
@@ -105,24 +106,24 @@ public class AlexNet {
                         .nOut(256)
                         .biasInit(nonZeroBias)
                         .build())
-//                .layer(9, new SubsamplingLayer.Builder(poolingType, new int[]{3, 3}, new int[]{2, 2})
-//                        .name("maxpool3")
-//                        .build())
-                .layer(9, new DenseLayer.Builder()
+                .layer(9, new SubsamplingLayer.Builder(poolingType, new int[]{3, 3}, new int[]{2, 2})
+                        .name("maxpool3")
+                        .build())
+                .layer(10, new DenseLayer.Builder()
                         .name("ffn1")
                         .nOut(4096)
                         .dist(new GaussianDistribution(0, 0.005))
                         .biasInit(nonZeroBias)
                         .dropOut(dropOut)
                         .build())
-                .layer(10, new DenseLayer.Builder()
+                .layer(11, new DenseLayer.Builder()
                         .name("ffn2")
                         .nOut(4096)
                         .dist(new GaussianDistribution(0, 0.005))
                         .biasInit(nonZeroBias)
                         .dropOut(dropOut)
                         .build())
-                .layer(11, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .layer(12, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                         .name("output")
                         .nOut(outputNum)
                         .activation("softmax")

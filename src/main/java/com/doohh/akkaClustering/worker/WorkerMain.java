@@ -18,24 +18,18 @@ public class WorkerMain {
 
 	public static void main(String[] args) {
 		Logger log = LoggerFactory.getLogger(WorkerMain.class);
-
-		hostIp = args.length > 0 ? args[0] : "127.0.0.1";
-		port = "0";
-
 		String seedNodes = PropFactory.getInstance().getSeedConf("worker");
 		String role = "[worker]";
-		log.info("Starting distDepp Master");
+		hostIp = args.length > 0 ? args[0] : "127.0.0.1";
+		port = "0";
+		
+		log.info("Starting distDepp worker");
 
 		Config conf = ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostIp)
 				.withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port))
 				.withFallback(ConfigFactory.parseString("akka.cluster.seed-nodes=" + seedNodes))
 				.withFallback(ConfigFactory.parseString("akka.cluster.roles=" + role))
 				.withFallback(ConfigFactory.load("application"));
-		
-//		log.info("hostname : " + conf.getString("akka.remote.netty.tcp.hostname"));
-//		log.info("hostport : " + conf.getString("akka.remote.netty.tcp.port"));
-//		log.info("seed-nodes : " + conf.getList("akka.cluster.seed-nodes"));
-//		log.info("roles : " + conf.getList("akka.cluster.roles"));
 		
 		ActorSystem actorSystem = ActorSystem.create(systemName, conf);
 		actorSystem.actorOf(Props.create(Worker.class), "worker");

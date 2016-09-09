@@ -2,6 +2,10 @@ package com.doohh.akkaClustering.master;
 
 import java.util.HashMap;
 
+import org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator;
+import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+
 import com.doohh.akkaClustering.deploy.Launcher;
 import com.doohh.akkaClustering.deploy.UserAppConf;
 import com.doohh.akkaClustering.worker.Worker;
@@ -53,13 +57,19 @@ public class Master extends UntypedActor {
 		} else if (message instanceof UnreachableMember) {
 			UnreachableMember mUnreachable = (UnreachableMember) message;
 			workers.remove(mUnreachable.member().address());
-		} else if (message instanceof UserAppConf) {
+		}
+
+		else if (message instanceof UserAppConf) {
 			userAppConf = (UserAppConf) message;
 			launcher.tell(userAppConf, getSelf());
 			getSender().tell("received UserAppConf instance", getSelf());
-		} else if (message.equals("getWorkers")) {
+		}
+
+		else if (message.equals("getWorkers")) {
 			getSender().tell(workers, getSelf());
-		} else if (message instanceof String) {
+		}
+
+		else if (message instanceof String) {
 			log.info("Get message = {}", (String) message);
 		} else {
 			unhandled(message);
