@@ -21,11 +21,8 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Created by agibsonccc on 9/16/15.
- */
-public class LenetMnistExample {
-	private static final Logger log = LoggerFactory.getLogger(LenetMnistExample.class);
+public class LenetMnistEarlyStoppingEx {
+	private static final Logger log = LoggerFactory.getLogger(LenetMnistEarlyStoppingEx.class);
 
     public static void main(String[] args) throws Exception {
         int nChannels = 1;
