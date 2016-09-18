@@ -1,0 +1,96 @@
+703  [main] INFO  com.doohh.example.LenetDistEx - Load data....
+1537 [main] INFO  com.doohh.example.LenetDistEx - Build model....
+8362 [main] DEBUG org.nd4j.nativeblas.NativeOps - Number of threads used for linear algebra 2
+8366 [main] DEBUG org.nd4j.nativeblas.NativeOps - Number of threads used for linear algebra 2
+8454 [main] DEBUG org.reflections.Reflections - going to scan these urls:
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-jackson/0.5.0/nd4j-jackson-0.5.0.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-macosx-x86_64.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-api/0.5.0/nd4j-api-0.5.0.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native-api/0.5.0/nd4j-native-api-0.5.0.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-buffer/0.5.0/nd4j-buffer-0.5.0.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-common/0.5.0/nd4j-common-0.5.0.jar!/
+jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-context/0.5.0/nd4j-context-0.5.0.jar!/
+8737 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/macosx-x86_64/libiomp5.dylib in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-macosx-x86_64.jar!/ with scanner TypeAnnotationsScanner
+8743 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/macosx-x86_64/libiomp5.dylib in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-macosx-x86_64.jar!/ with scanner SubTypesScanner
+8744 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/macosx-x86_64/libjnind4j.dylib in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-macosx-x86_64.jar!/ with scanner TypeAnnotationsScanner
+8745 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/macosx-x86_64/libjnind4j.dylib in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-macosx-x86_64.jar!/ with scanner SubTypesScanner
+8746 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/macosx-x86_64/libnd4j.dylib in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-macosx-x86_64.jar!/ with scanner TypeAnnotationsScanner
+8747 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/macosx-x86_64/libnd4j.dylib in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-macosx-x86_64.jar!/ with scanner SubTypesScanner
+8987 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libnd4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner TypeAnnotationsScanner
+8988 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libnd4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner SubTypesScanner
+8989 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libblas.so.3 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner TypeAnnotationsScanner
+8989 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libblas.so.3 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner SubTypesScanner
+8990 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libjnind4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner TypeAnnotationsScanner
+8991 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libjnind4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner SubTypesScanner
+8991 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libgfortran.so.3 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner TypeAnnotationsScanner
+8992 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libgfortran.so.3 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner SubTypesScanner
+8994 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libgomp.so.1 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner TypeAnnotationsScanner
+8995 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-ppc64le/libgomp.so.1 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-ppc64le.jar!/ with scanner SubTypesScanner
+8996 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libgomp.so.1 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner TypeAnnotationsScanner
+8997 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libgomp.so.1 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner SubTypesScanner
+8997 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libgfortran.so.3 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner TypeAnnotationsScanner
+8998 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libgfortran.so.3 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner SubTypesScanner
+8998 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libopenblas.so.0 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner TypeAnnotationsScanner
+8999 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libopenblas.so.0 in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner SubTypesScanner
+9000 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libnd4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9000 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libnd4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner SubTypesScanner
+9000 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libjnind4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9001 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/linux-x86_64/libjnind4j.so in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-linux-x86_64.jar!/ with scanner SubTypesScanner
+9002 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/jnind4j.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9003 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/jnind4j.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9004 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libgcc_s_seh-1.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9004 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libgcc_s_seh-1.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9005 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libgfortran-3.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9006 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libgfortran-3.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9007 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libgomp-1.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9008 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libgomp-1.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9008 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libnd4j.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9009 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libnd4j.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9009 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libopenblas.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9010 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libopenblas.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9010 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libquadmath-0.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9011 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libquadmath-0.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9011 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libstdc++-6.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9012 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libstdc++-6.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9012 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libwinpthread-1.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner TypeAnnotationsScanner
+9013 [main] DEBUG org.reflections.Reflections - could not scan file org/nd4j/nativeblas/windows-x86_64/libwinpthread-1.dll in url jar:file:/C:/Users/duhyun/.m2/repository/org/nd4j/nd4j-native/0.5.0/nd4j-native-0.5.0-windows-x86_64.jar!/ with scanner SubTypesScanner
+9039 [main] INFO  org.reflections.Reflections - Reflections took 580 ms to scan 11 urls, producing 111 keys and 368 values 
+10137 [main] INFO  com.doohh.example.LenetDistEx - Train model....
+10653 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 0 is 2.521898216309776
+10659 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : -2.481763E-4
+11084 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 1 is 2.3332566901575547
+11085 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : -3.7381588E-4
+11355 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 2 is 1.9908611965806045
+11356 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 2.7549264E-4
+11640 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 3 is 2.0276542258373422
+11641 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 2.848381E-4
+11936 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 4 is 1.6342095236061334
+11936 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : -4.6445115E-4
+12206 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 5 is 1.6480846992253468
+12207 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 3.1070458E-4
+12592 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 6 is 1.3669995622606181
+12593 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 1.1625585E-4
+13045 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 7 is 1.2643424344560226
+13046 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : -1.5003837E-4
+13353 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 8 is 0.930259675481149
+13353 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 1.0178196E-4
+13668 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 9 is 0.8788867664726262
+13670 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 3.2445407E-4
+14051 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 10 is 0.9837277594224237
+14052 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 3.8622852E-4
+14336 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 11 is 0.8009423961135848
+14337 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 1.9000843E-4
+14597 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 12 is 0.6155838440106722
+14598 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 5.848104E-4
+14942 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 13 is 0.6707836639189231
+14943 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 0.0010337036
+15266 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 14 is 0.6933886872430289
+15267 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 0.0010116468
+15534 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 15 is 0.4822569946435525
+15535 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 3.6023435E-4
+16133 [main] INFO  o.d.o.l.ScoreIterationListener - Score at iteration 16 is 0.47819299115422187
+16136 [main] INFO  c.d.example.DistMultiLayerNetwork - gradient : 7.627397E-4

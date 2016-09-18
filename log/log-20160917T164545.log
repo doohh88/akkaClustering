@@ -1,0 +1,2 @@
+763  [main] INFO  com.doohh.example.CifarDistEx - batchSize : 500
+780  [main] INFO  com.doohh.example.CifarDistEx - nEpochs: 1
