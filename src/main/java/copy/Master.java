@@ -1,9 +1,13 @@
-package com.doohh.akkaClustering.master;
+package copy;
 
 import java.util.HashMap;
 
+import org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator;
+import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+
+import com.doohh.akkaClustering.deploy.Launcher;
 import com.doohh.akkaClustering.deploy.AppConf;
-import com.doohh.akkaClustering.util.Node;
 import com.doohh.akkaClustering.worker.Worker;
 
 import akka.actor.ActorRef;
@@ -16,17 +20,16 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 import akka.cluster.Member;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.japi.Procedure;
 import lombok.Getter;
 
 @Getter
 public class Master extends UntypedActor {
+	public static final String MASTER_REGISTRATION = "MasterRegistration";
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	Cluster cluster = Cluster.get(getContext().system());
-	public static final String REGISTRATION_TO_MASTER = "Master registrate the worker";
-	//HashMap<Address, ActorRef> workers = new HashMap<Address, ActorRef>();
-	//ArrayList<Node> workers = new ArrayList<Node>();
-	HashMap<Address, Node> workers = new HashMap<Address, Node>();
-
+	HashMap<Address, ActorRef> workers = new HashMap<Address, ActorRef>();
+	AppConf appConf = null;
 	private ActorRef launcher;
 
 	// subscribe to cluster changes, MemberUp
@@ -40,17 +43,15 @@ public class Master extends UntypedActor {
 	@Override
 	public void postStop() {
 		cluster.unsubscribe(getSelf());
+
 	}
 
 	@Override
 	public void onReceive(Object message) throws Throwable {
-		// clustering part
-		if (message.equals(Worker.REGISTRATION_TO_WORKER)) {
+		// TODO Auto-generated method stub
+		if (message.equals(Worker.WORKER_REGISTRATION)) {
 			getContext().watch(getSender());
-			//workers.put(getSender().path().address(), getSender());
-			//workers.add(new Node(getSender().path().address(), getSender(), false));
-			workers.put(getSender().path().address(), new Node(getSender(), false));
-			log.info("workers : {}", workers);
+			workers.put(getSender().path().address(), getSender());
 		} else if (message instanceof MemberUp) {
 			MemberUp mUp = (MemberUp) message;
 			register(mUp.member());
@@ -59,30 +60,26 @@ public class Master extends UntypedActor {
 			workers.remove(mUnreachable.member().address());
 		}
 
-		// deploy part
 		else if (message instanceof AppConf) {
-			AppConf appConf = (AppConf) message;
+			appConf = (AppConf) message;
 			launcher.tell(appConf, getSelf());
 			getSender().tell("received UserAppConf instance", getSelf());
 		}
 
-		//send worker list
-		else if (message.equals("getWorkers()")) {
+		else if (message.equals("getWorkers")) {
 			getSender().tell(workers, getSelf());
 		}
 
 		else if (message instanceof String) {
 			log.info("Get message = {}", (String) message);
-		} 
-		
-		else {
+		} else {
 			unhandled(message);
 		}
 	}
-
+	
 	void register(Member member) {
 		if (member.hasRole("worker")) {
-			getContext().actorSelection(member.address() + "/user/worker").tell(REGISTRATION_TO_MASTER, getSelf());
+			getContext().actorSelection(member.address() + "/user/worker").tell(MASTER_REGISTRATION, getSelf());
 		}
 	}
 }

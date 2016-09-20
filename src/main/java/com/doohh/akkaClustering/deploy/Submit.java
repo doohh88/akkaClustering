@@ -14,25 +14,22 @@ import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 public class Submit extends UntypedActor {
-	// Logger log = LoggerFactory.getLogger(Submit.class);
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-
 	private ActorSelection master;
 	private Timeout timeout = new Timeout(Duration.create(5, "seconds"));
 	private final ExecutionContext ec;
-
+	
 	public Submit() {
 		ec = context().system().dispatcher();
 	}
-
+	
 	@Override
 	public void onReceive(Object message) throws Throwable {
-		if (message instanceof UserAppConf) {
-			UserAppConf userAppConf = (UserAppConf) message;
-			String masterIP = userAppConf.getMasterIP();
-			String path = "akka.tcp://deepDist@" + masterIP + ":2551/user/master";
-			master = getContext().actorSelection(path);
-			Future<Object> future = Patterns.ask(master, userAppConf, timeout);
+		//send AppConf to master. After sending, shut down the Submit actor
+		if (message instanceof AppConf) {
+			AppConf appConf = (AppConf) message;
+			master = getContext().actorSelection(appConf.masterURL);
+			Future<Object> future = Patterns.ask(master, appConf, timeout);
 
 			future.onSuccess(new SaySuccess<Object>(), ec);
 			future.onComplete(new SayComplete<Object>(), ec);

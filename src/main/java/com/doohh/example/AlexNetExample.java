@@ -11,6 +11,8 @@ import org.nd4j.linalg.dataset.DataSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import example.Util;
+
 public class AlexNetExample {
 	private static final Logger log = LoggerFactory.getLogger(AlexNetExample.class);
 	protected static int HEIGHT = 224;

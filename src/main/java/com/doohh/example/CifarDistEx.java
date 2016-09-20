@@ -38,7 +38,7 @@ private static final Logger log = LoggerFactory.getLogger(CifarDistEx.class);
     int numTest = CifarLoader.NUM_TEST_IMAGES;
 
     
-	private void pareArgs(String[] args) {
+	private void parseArgs(String[] args) {
 		CmdLineParser parser = new CmdLineParser(this);
         try {
             parser.parseArgument(args);
@@ -54,7 +54,7 @@ private static final Logger log = LoggerFactory.getLogger(CifarDistEx.class);
 	
 	void run(String[] args) {
 		// TODO Auto-generated method stub
-		this.pareArgs(args);
+		this.parseArgs(args);
 		
 		int nChannels = 3;
 	    int outputNum = 10;

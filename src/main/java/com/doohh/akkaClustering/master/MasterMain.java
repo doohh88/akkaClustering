@@ -1,32 +1,33 @@
 package com.doohh.akkaClustering.master;
 
-import org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.doohh.akkaClustering.util.PropFactory;
+import com.doohh.akkaClustering.util.Util;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 
 public class MasterMain {
-	public static String hostIp;
-	public static String port;
-	public static String systemName = "deepDist";
 	private static final Logger log = LoggerFactory.getLogger(MasterMain.class);
+	@Option(name = "--hostIP", usage = "hostIP", aliases = "-h")
+	public static String hostIP = "127.0.0.1";
+	@Option(name = "--port", usage = "port", aliases = "-p")
+	public static String port = "2551";
+	public static String systemName = "deepDist";
+
 	public static void main(String[] args) {
 		String seedNodes = PropFactory.getInstance().getSeedConf("master");
 		String role = "[master]";
-		hostIp = args.length > 0 ? args[0] : "127.0.0.1";
-		port = "2551";
+		
+		Util.parseArgs(args, new MasterMain());
 
 		log.info("Starting distDepp Master");
-
-		Config conf = ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostIp)
+		Config conf = ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostIP)
 				.withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port))
 				.withFallback(ConfigFactory.parseString("akka.cluster.seed-nodes=" + seedNodes))
 				.withFallback(ConfigFactory.parseString("akka.cluster.roles=" + role))

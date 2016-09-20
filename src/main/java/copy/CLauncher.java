@@ -1,4 +1,4 @@
-package com.doohh.akkaClustering.deploy;
+package com.doohh.akkaClustering.deplo;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
