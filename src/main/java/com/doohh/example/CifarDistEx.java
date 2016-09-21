@@ -25,6 +25,8 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.doohh.nn.DistMultiLayerNetwork;
+
 public class CifarDistEx {
 private static final Logger log = LoggerFactory.getLogger(CifarDistEx.class);
 	
@@ -106,18 +108,8 @@ private static final Logger log = LoggerFactory.getLogger(CifarDistEx.class);
         MultiLayerConfiguration conf = builder.build();
         MultiLayerNetwork network = new DistMultiLayerNetwork(conf);
         network.init();
-        
-        
-//        log.info("gradient : {}", network.gradient());
-        
-        //network.fit(train);
-//        log.info("params : {}", network.params());
-        
-        
-        
         network.setListeners(new ScoreIterationListener(listenerFreq));
-		
-        
+		        
         for (int i = 0; i < nEpochs; i++) {
 			network.fit(train);
 			

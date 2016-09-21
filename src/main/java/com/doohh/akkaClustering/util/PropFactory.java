@@ -17,8 +17,7 @@ public class PropFactory {
 	String[] seedList;
 	String seedConf;
 
-	private PropFactory() {
-	}
+	private PropFactory() {	}
 
 	public static PropFactory getInstance() {
 		if (instance == null) {

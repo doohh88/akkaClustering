@@ -16,7 +16,7 @@ import scala.concurrent.duration.Duration;
 public class Submit extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	private ActorSelection master;
-	private Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
 	private final ExecutionContext ec;
 	
 	public Submit() {

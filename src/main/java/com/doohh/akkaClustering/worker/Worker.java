@@ -57,9 +57,8 @@ public class Worker extends UntypedActor {
 			log.info("appConf : {}", appConf);
 			ActorRef task = context().actorOf(Props.create(Task.class), "task");
 			task.tell(appConf, getSender());
-			//getSender().tell("finish()", getSender());
 		}
-		
+				
 		else if (message instanceof String) {
 			log.info("Get message = {}", (String) message);
 		} 

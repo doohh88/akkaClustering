@@ -11,7 +11,7 @@ import org.nd4j.linalg.dataset.DataSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import example.Util;
+import example.CUtil;
 
 public class AlexNetExample {
 	private static final Logger log = LoggerFactory.getLogger(AlexNetExample.class);
@@ -23,7 +23,7 @@ public class AlexNetExample {
 	protected static int numLabels = CifarLoader.NUM_LABELS;
 
 	public static void main(String[] args) throws Exception {
-		Util.load("libopenblas");
+		CUtil.load("libopenblas");
 		//LibUtils.loadLibrary("libopenblas");
 
 		int nChannels = 3;

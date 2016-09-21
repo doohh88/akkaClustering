@@ -2,7 +2,11 @@ package com.doohh.akkaClustering.deploy;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.HashMap;
 
+import com.doohh.akkaClustering.util.Node;
+
+import akka.actor.Address;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -16,9 +20,13 @@ public class AppConf implements Serializable{
 	String jarPath;
 	String classPath;	
 	int parallelism;
-	
+	String[] args;
+
+	//decide in build
 	String masterURL;
 	File jarFile;
+	
+	//decide in runtime
 	
 	private AppConf(Builder builder){
 		masterIP = builder.masterIP;
@@ -26,19 +34,21 @@ public class AppConf implements Serializable{
 		jarPath = builder.jarPath;
 		classPath = builder.classPath;
 		parallelism = builder.parallelism;
+		args = builder.args;
 		masterURL = builder.masterURL;
-		jarFile = builder.jarFile;
+		jarFile = builder.jarFile;		
 	}
 	
 	public static class Builder {
-		String masterIP;
-		String port;
-		String jarPath;
-		String classPath;
-		int parallelism;
+		String masterIP = "127.0.0.1";
+		String port = "2551";
+		String jarPath = null;
+		String classPath = null;
+		int parallelism = 1;
+		String[] args = null;
 		
-		String masterURL;
-		File jarFile;
+		String masterURL = null;
+		File jarFile = null;
 
 		
 		public Builder() {};
@@ -61,6 +71,10 @@ public class AppConf implements Serializable{
 		}
 		public Builder parallelism(int parallelism){
 			this.parallelism = parallelism;
+			return this;
+		}
+		public Builder args(String[] args){
+			this.args = args;
 			return this;
 		}
 		

@@ -67,7 +67,9 @@ public class Launcher extends UntypedActor {
 			//workers = (ArrayList<Node>) result;
 			workers = (HashMap<Address, Node>) result;
 			router = selectNodes(workers);
+			
 			router.tell(appConf, getSelf());
+			context().stop(router);
 		}
 	}
 
@@ -92,10 +94,9 @@ public class Launcher extends UntypedActor {
 			if (node.isProc() == false) {
 				routeePaths.add(node.getActorRef().path().toString());
 				node.setProc(true);
-				if(routeePaths.size() == parallelism) break; 
+				if(routeePaths.size() == parallelism + 1) break; 
 			}
 		}
-	
 		log.info("routeePaths : {}", routeePaths);
 		ActorRef router = getContext().actorOf(new BroadcastGroup(routeePaths).props(), "router");
 		return router;
