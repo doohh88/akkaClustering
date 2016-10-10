@@ -21,10 +21,10 @@ public class MasterMain {
 	public static String systemName = "deepDist";
 
 	public static void main(String[] args) {
+		Util.parseArgs(args, new MasterMain());
+
 		String seedNodes = PropFactory.getInstance().getSeedConf("master");
 		String role = "[master]";
-		
-		Util.parseArgs(args, new MasterMain());
 
 		log.info("Starting distDepp Master");
 		Config conf = ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostIP)

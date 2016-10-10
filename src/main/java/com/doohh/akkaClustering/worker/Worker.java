@@ -1,6 +1,6 @@
 package com.doohh.akkaClustering.worker;
 
-import java.util.HashMap;
+import java.util.Hashtable;
 
 import com.doohh.akkaClustering.deploy.AppConf;
 import com.doohh.akkaClustering.master.Master;
@@ -11,6 +11,7 @@ import akka.actor.Address;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.Member;
 import akka.event.Logging;
@@ -22,9 +23,7 @@ public class Worker extends UntypedActor {
 	public static final String REGISTRATION_TO_WORKER = "Worker registrate the master";
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	Cluster cluster = Cluster.get(getContext().system());
-	//HashMap<Address, ActorRef> masters = new HashMap<Address, ActorRef>();
-	//ArrayList<Node> masters = new ArrayList<Node>();
-	HashMap<Address, Node> masters = new HashMap<Address, Node>();
+	Hashtable<Address, Node> masters = new Hashtable<Address, Node>();
 	AppConf userAppConf;
 
 	// subscribe to cluster changes, MemberUp
@@ -42,28 +41,34 @@ public class Worker extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message.equals(Master.REGISTRATION_TO_MASTER)) {
-			getContext().watch(getSender());
-			//masters.put(getSender().path().address(), getSender());
-			//masters.add(new Node(getSender().path().address(), getSender(), false));
+			log.info("received registration msg from the master");
+			log.info("register the master at worker");
 			masters.put(getSender().path().address(), new Node(getSender(), false));
-			log.info("master list = {}", masters.toString());
+			log.info("current masterTable: {}", masters);
 		} else if (message instanceof MemberUp) {
+			log.info("received MemberUp msg");
 			MemberUp mUp = (MemberUp) message;
+			log.info("send the msg to the worker for handshaking");
 			register(mUp.member());
+		} else if (message instanceof MemberEvent) {
 		}
 
-		else if(message instanceof AppConf){
-			AppConf appConf = (AppConf)message;
-			log.info("appConf : {}", appConf);
+		else if (message instanceof AppConf) {
+			AppConf appConf = (AppConf) message;
+			log.info("get appConf from master : {}", appConf);
+
 			ActorRef task = context().actorOf(Props.create(Task.class), "task");
+			log.info("generate task for proc");
+
 			task.tell(appConf, getSender());
 		}
-				
+
 		else if (message instanceof String) {
 			log.info("Get message = {}", (String) message);
-		} 
-		
+		}
+
 		else {
+			log.info("receive unhandled msg");
 			unhandled(message);
 		}
 

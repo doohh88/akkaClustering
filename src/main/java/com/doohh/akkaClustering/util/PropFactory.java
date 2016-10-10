@@ -47,7 +47,7 @@ public class PropFactory {
 		String seedNodes = props.getProperty("seed-nodes");
 		if (seedNodes == null) {
 			log.info("if you have seed-nodes, please input seed-nodes IP in $DISTDEEPHOME/conf/config.properties");
-			seedNodes = "127.0.0.1";
+			seedNodes = MasterMain.hostIP;
 		} 		
 		seedList = new String(seedNodes).split(",");
 	}
@@ -66,9 +66,5 @@ public class PropFactory {
 		seedNodes = seedNodes.substring(0, seedNodes.length() - 2);
 		seedNodes += "]";
 		return seedNodes;
-	}
-
-	public void print() {
-		System.out.println("hello i'm properties");
 	}
 }
