@@ -5,6 +5,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import com.doohh.akkaClustering.deploy.AppConf;
+import com.doohh.akkaClustering.util.NetworkInfo;
 import com.doohh.akkaClustering.util.Node;
 
 import akka.actor.ActorRef;
@@ -18,6 +19,7 @@ import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.routing.RoundRobinGroup;
 import akka.util.Timeout;
+import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -33,7 +35,8 @@ public class Launcher extends UntypedActor {
 	private int nSlaveNode = 0;
 	private ActorRef procNode = null;
 	private AppConf appConf = null;
-	
+	private NetworkInfo networkInfo = null;
+
 	public Launcher() {
 		ec = context().system().dispatcher();
 	}
@@ -45,7 +48,7 @@ public class Launcher extends UntypedActor {
 			log.info("receive appConf msg from mater: {}", appConf);
 			Future<Object> f = Patterns.ask(getSender(), "getWorkers()", timeout);
 			log.info("request worker list");
-			
+
 			f.onSuccess(new SaySuccess<Object>(), ec);
 			f.onComplete(new SayComplete<Object>(), ec);
 			f.onFailure(new SayFailure<Object>(), ec);
@@ -56,6 +59,7 @@ public class Launcher extends UntypedActor {
 			log.info("workers : {}", workers);
 			getSender().tell("stopTask", getSelf());
 			log.info("send msg(stopTask) to the TaskActor");
+			networkInfo = null;
 		}
 
 		else {
@@ -70,20 +74,27 @@ public class Launcher extends UntypedActor {
 			log.info("Succeeded with " + result);
 			workers = (Hashtable<Address, Node>) result;
 			procNode = selectNodes(workers);
-			for (int i = 0; i < nParamNode; i++) {
-				//ex. role: param, roleIdx: 0
-				appConf.setRole("param");
-				appConf.setRoleIdx(i);
-				log.info("send appConf to worker: {}", procNode);
-				procNode.tell(appConf, getSelf());
+			appConf.setNetworkInfo(networkInfo);
+
+			try {
+				for (int i = 0; i < nProcNodes; i++) {
+					// ex. role: param, roleIdx: 0
+					if (i < nParamNode) {
+						appConf.setRole("param");
+						appConf.setRoleIdx(i);
+					} else {
+						appConf.setRole("slave");
+						appConf.setRoleIdx(i - nParamNode);
+					}
+					log.info("send appConf to worker: {}", procNode);
+					Future<Object> future = Patterns.ask(procNode, appConf, timeout);
+					String rst = (String) Await.result(future, timeout.duration());
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				context().stop(procNode);
 			}
-			for (int i = 0; i < nSlaveNode; i++) {
-				appConf.setRole("slave");
-				appConf.setRoleIdx(i);
-				log.info("send appConf to worker: {}", procNode);
-				procNode.tell(appConf, getSelf());
-			}
-			context().stop(procNode);
 		}
 	}
 
@@ -103,18 +114,30 @@ public class Launcher extends UntypedActor {
 
 	public ActorRef selectNodes(Hashtable<Address, Node> workers) {
 		List<String> routeePaths = new ArrayList<String>();
+		networkInfo = new NetworkInfo();
+
 		this.nParamNode = this.appConf.getNMaster();
 		this.nSlaveNode = this.appConf.getNWorker();
 		this.nProcNodes = this.nParamNode + this.nSlaveNode;
 
 		log.info("select {} nodes for proc", this.nProcNodes);
+		int i = 0;
 		for (Node node : workers.values()) {
 			if (node.isProc() == false) {
-				routeePaths.add(node.getActorRef().path().toString());
+				String addr = node.getActorRef().path().toString();
+				routeePaths.add(addr);
 				node.setProc(true);
 				log.info("set node state by true: {}", node);
+
+				if (i < this.nParamNode) {
+					networkInfo.getParamAddr().add(addr);
+				} else {
+					networkInfo.getSlaveAddr().add(addr);
+				}
+
 				if (routeePaths.size() == this.nProcNodes)
 					break;
+				i++;
 			}
 		}
 		log.info("routeePaths : {}", routeePaths);

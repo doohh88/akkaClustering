@@ -7,6 +7,7 @@ import com.doohh.akkaClustering.master.Master;
 import com.doohh.akkaClustering.util.Node;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.Address;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -21,7 +22,7 @@ import lombok.Getter;
 @Getter
 public class Worker extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-	public static final String REGISTRATION_TO_WORKER = "Worker registrate the master";	
+	public static final String REGISTRATION_TO_WORKER = "Worker registrate the master";
 	private Cluster cluster = Cluster.get(getContext().system());
 	private Hashtable<Address, Node> masters = new Hashtable<Address, Node>();
 	private AppConf userAppConf;
@@ -43,7 +44,8 @@ public class Worker extends UntypedActor {
 		if (message.equals(Master.REGISTRATION_TO_MASTER)) {
 			log.info("received registration msg from the master");
 			log.info("register the master at worker");
-			masters.put(getSender().path().address(), new Node(getSender(), false));
+			// masters.put(getSender().path().address(), new Node(getSender(),
+			// false));
 			log.info("current masterTable: {}", masters);
 		} else if (message instanceof MemberUp) {
 			log.info("received MemberUp msg");
@@ -56,7 +58,9 @@ public class Worker extends UntypedActor {
 		else if (message instanceof AppConf) {
 			AppConf appConf = (AppConf) message;
 			log.info("get appConf from master : {}", appConf);
-
+			getSender().tell("receive appConf from launcher", getSelf());
+			System.out.println("role: " + appConf.getRole() + " idx: " + appConf.getRoleIdx());
+			System.out.println(appConf.getNetworkInfo());
 			ActorRef task = context().actorOf(Props.create(Task.class), "task");
 			log.info("generate task for proc");
 

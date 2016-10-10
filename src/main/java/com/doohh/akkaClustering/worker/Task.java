@@ -7,6 +7,7 @@ import java.net.URLClassLoader;
 
 import com.doohh.akkaClustering.deploy.AppConf;
 
+import akka.actor.ActorSelection;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -19,16 +20,17 @@ import scala.concurrent.duration.Duration;
 public class Task extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
-
+	private ActorSelection launcher = null;
 	
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof AppConf) {
 			AppConf appConf = (AppConf) message;
 			log.info("get appConf from worker : {}", appConf);
+			launcher = getContext().actorSelection(getSender().path().address() + "/user/master/launcher");
 			runApp(appConf);
 			log.info("send msg(complet task) to {}", getSender());
-			Future<Object> future = Patterns.ask(getSender(), "finish()", timeout);
+			Future<Object> future = Patterns.ask(launcher, "finish()", timeout);
 			String result = (String) Await.result(future, timeout.duration());
 			context().stop(getSelf());
 			log.info("stop the task");

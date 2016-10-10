@@ -2,11 +2,9 @@ package com.doohh.akkaClustering.deploy;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.HashMap;
 
-import com.doohh.akkaClustering.util.Node;
+import com.doohh.akkaClustering.util.NetworkInfo;
 
-import akka.actor.Address;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -15,6 +13,11 @@ import lombok.ToString;
 @ToString
 @AllArgsConstructor
 public class AppConf implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	String hostIP;
 	String port;
 	String jarPath;
@@ -30,6 +33,7 @@ public class AppConf implements Serializable {
 	// decide in runtime
 	String role;
 	int roleIdx;
+	NetworkInfo networkInfo;
 
 	public void setRole(String role) {
 		this.role = role;
@@ -39,6 +43,10 @@ public class AppConf implements Serializable {
 		this.roleIdx = roleIdx;
 	}
 
+	public void setNetworkInfo(NetworkInfo networkInfo) {
+		this.networkInfo = networkInfo;
+	}
+	
 	private AppConf(Builder builder) {
 		hostIP = builder.hostIP;
 		port = builder.port;

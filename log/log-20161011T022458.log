@@ -1,0 +1,8 @@
+1139 [main] INFO  c.d.akkaClustering.util.PropFactory - if you have seed-nodes, please input seed-nodes IP in $DISTDEEPHOME/conf/config.properties
+1150 [main] INFO  c.d.a.master.MasterMain - Starting distDepp Master
+3987 [main] INFO  c.d.akkaClustering.util.PropFactory - if you have seed-nodes, please input seed-nodes IP in $DISTDEEPHOME/conf/config.properties
+3988 [main] INFO  c.d.a.worker.WorkerMain - Starting distDepp worker
+4388 [main] INFO  c.d.akkaClustering.util.PropFactory - if you have seed-nodes, please input seed-nodes IP in $DISTDEEPHOME/conf/config.properties
+4389 [main] INFO  c.d.a.worker.WorkerMain - Starting distDepp worker
+4877 [main] INFO  c.d.akkaClustering.util.PropFactory - if you have seed-nodes, please input seed-nodes IP in $DISTDEEPHOME/conf/config.properties
+4877 [main] INFO  c.d.a.worker.WorkerMain - Starting distDepp worker
