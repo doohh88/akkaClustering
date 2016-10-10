@@ -9,6 +9,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class Node {
 	//Address address;
-	ActorRef actorRef;
-	boolean proc;
+	private ActorRef actorRef;
+	private boolean proc;
 }

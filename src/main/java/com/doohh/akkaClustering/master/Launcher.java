@@ -1,7 +1,7 @@
 package com.doohh.akkaClustering.master;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 
 import com.doohh.akkaClustering.deploy.AppConf;
@@ -16,7 +16,7 @@ import akka.dispatch.OnSuccess;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
-import akka.routing.BroadcastGroup;
+import akka.routing.RoundRobinGroup;
 import akka.util.Timeout;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
@@ -27,13 +27,13 @@ public class Launcher extends UntypedActor {
 
 	private Timeout timeout = new Timeout(Duration.create(5, "seconds"));
 	private final ExecutionContext ec;
-	// HashMap<Address, ActorRef> workers = new HashMap<Address, ActorRef>();
-	//ArrayList<Node> workers = new ArrayList<Node>();
-	HashMap<Address, Node> workers = new HashMap<Address, Node>();
-
-	ActorRef router;
-	AppConf appConf;
-
+	private Hashtable<Address, Node> workers = new Hashtable<Address, Node>();
+	private int nProcNodes = 0;
+	private int nParamNode = 0;
+	private int nSlaveNode = 0;
+	private ActorRef procNode = null;
+	private AppConf appConf = null;
+	
 	public Launcher() {
 		ec = context().system().dispatcher();
 	}
@@ -42,17 +42,22 @@ public class Launcher extends UntypedActor {
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof AppConf) {
 			this.appConf = (AppConf) message;
+			log.info("receive appConf msg from mater: {}", appConf);
 			Future<Object> f = Patterns.ask(getSender(), "getWorkers()", timeout);
+			log.info("request worker list");
+			
 			f.onSuccess(new SaySuccess<Object>(), ec);
 			f.onComplete(new SayComplete<Object>(), ec);
 			f.onFailure(new SayFailure<Object>(), ec);
 		}
-		
-		else if(message.equals("finish()")){
+
+		else if (message.equals("finish()")) {
 			workers.get(getSender().path().address()).setProc(false);
 			log.info("workers : {}", workers);
+			getSender().tell("stopTask", getSelf());
+			log.info("send msg(stopTask) to the TaskActor");
 		}
-		
+
 		else {
 			unhandled(message);
 
@@ -63,13 +68,22 @@ public class Launcher extends UntypedActor {
 		@Override
 		public final void onSuccess(T result) {
 			log.info("Succeeded with " + result);
-			// workers = (HashMap<Address, ActorRef>) result;
-			//workers = (ArrayList<Node>) result;
-			workers = (HashMap<Address, Node>) result;
-			router = selectNodes(workers);
-			
-			router.tell(appConf, getSelf());
-			context().stop(router);
+			workers = (Hashtable<Address, Node>) result;
+			procNode = selectNodes(workers);
+			for (int i = 0; i < nParamNode; i++) {
+				//ex. role: param, roleIdx: 0
+				appConf.setRole("param");
+				appConf.setRoleIdx(i);
+				log.info("send appConf to worker: {}", procNode);
+				procNode.tell(appConf, getSelf());
+			}
+			for (int i = 0; i < nSlaveNode; i++) {
+				appConf.setRole("slave");
+				appConf.setRoleIdx(i);
+				log.info("send appConf to worker: {}", procNode);
+				procNode.tell(appConf, getSelf());
+			}
+			context().stop(procNode);
 		}
 	}
 
@@ -87,29 +101,24 @@ public class Launcher extends UntypedActor {
 		}
 	}
 
-	public ActorRef selectNodes(HashMap<Address, Node> workers) {
+	public ActorRef selectNodes(Hashtable<Address, Node> workers) {
 		List<String> routeePaths = new ArrayList<String>();
-		int parallelism = this.appConf.getParallelism();
-		for(Node node : workers.values()){
+		this.nParamNode = this.appConf.getNMaster();
+		this.nSlaveNode = this.appConf.getNWorker();
+		this.nProcNodes = this.nParamNode + this.nSlaveNode;
+
+		log.info("select {} nodes for proc", this.nProcNodes);
+		for (Node node : workers.values()) {
 			if (node.isProc() == false) {
 				routeePaths.add(node.getActorRef().path().toString());
 				node.setProc(true);
-				if(routeePaths.size() == parallelism + 1) break; 
+				log.info("set node state by true: {}", node);
+				if (routeePaths.size() == this.nProcNodes)
+					break;
 			}
 		}
 		log.info("routeePaths : {}", routeePaths);
-		ActorRef router = getContext().actorOf(new BroadcastGroup(routeePaths).props(), "router");
+		ActorRef router = getContext().actorOf(new RoundRobinGroup(routeePaths).props(), "router");
 		return router;
 	}
 }
-
-
-//Iterator<Node> keys = workers.iterator();
-//while (keys.hasNext()) {
-//	Node node = keys.next();
-//	if (node.isProc() == false) {
-//		routeePaths.add(node.getActorRef().path().toString());
-//		node.setProc(true);
-//		if(routeePaths.size() == parallelism) break; 
-//	}
-//}

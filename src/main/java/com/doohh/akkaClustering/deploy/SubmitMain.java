@@ -15,31 +15,35 @@ import akka.actor.Props;
 public class SubmitMain {
 	private static final Logger log = LoggerFactory.getLogger(SubmitMain.class);
 
-	@Option(name = "--master", usage = "master", aliases = "-m")
-	public static String master = "127.0.0.1";
+	@Option(name = "--hostIP", usage = "hostIP", aliases = "-h")
+	public static String hostIP = "127.0.0.1";
 	@Option(name = "--port", usage = "port", aliases = "-p")
 	public static String port = "2551";
 	@Option(name = "--jar", usage = "jarPath", aliases = "-j")
 	public static String jarPath = null;
 	@Option(name = "--class", usage = "classPath", aliases = "-c")
 	public static String classPath = null;
-	@Option(name = "--parallelism", usage = "parallelism", aliases = "-pr")
-	public static int parallelism = 1;
+	@Option(name = "--master", usage = "master", aliases = "-m")
+	public static int nMaster = 1;
+	@Option(name = "--worker", usage = "worker", aliases = "-w")
+	public static int nWorker = 1;
 
 	public static void main(String[] args) {
 		// test
-		// args = new String[8];
-		// args[0] = "-pr";
-		// args[1] = "2";
-		// args[2] = "-j";
-		// args[3] =
-		// "C:/git/akkaClustering/jars/TestPjt-0.0.1-SNAPSHOT-allinone.jar";
-		// args[4] = "-c";
-		// args[5] = "TestMain.Main";
-		// args[6] = "hello";
-		// args[7] = "args";
+		 args = new String[11];
+		 args[0] = "-m";
+		 args[1] = "1";
+		 args[2] = "-w";
+		 args[3] = "2";
+		 args[4] = "-j";
+		 args[5] = "C:/git/akkaClustering/jars/TestPjt-0.0.1-SNAPSHOT-allinone.jar";
+		 args[6] = "-c";
+		 args[7] = "TestMain.Main";
+		 args[8] = "args1";
+		 args[9] = "args2";
+		 args[10] = "args3";
 
-		String[] appArgs = Util.parseArgs(args, new SubmitMain());
+		String[] appArgs = Util.parseArgs(args, new SubmitMain(), "-c");
 		if (jarPath == null || classPath == null) {
 			log.error("please input --jar & --class option");
 			return;
@@ -49,8 +53,8 @@ public class SubmitMain {
 		final ActorSystem system = ActorSystem.create("deploy", conf);
 		final ActorRef submit = system.actorOf(Props.create(Submit.class), "submit");
 				
-		AppConf appConf = new AppConf.Builder().masterIP(master).port(port).jarPath(jarPath).classPath(classPath)
-				.parallelism(parallelism).args(appArgs).build();
+		AppConf appConf = new AppConf.Builder().hostIP(hostIP).port(port).jarPath(jarPath).classPath(classPath)
+				.nMaster(nMaster).nWorker(nWorker).args(appArgs).build();
 		log.info("build appConf: {}", appConf);
 
 		submit.tell(appConf, ActorRef.noSender());

@@ -9,4 +9,4 @@ if [ "$DISTDEEP_HOST" = "" ]; then
 fi
 
 CLASS="com.doohh.akkaClustering.deploy.SubmitMain"
-java -cp $DISTDEEP_HOME/jars/distDeep-core.jar $CLASS --master $DISTDEEP_HOST $@ &
+java -cp $DISTDEEP_HOME/jars/distDeep-core.jar $CLASS -h $DISTDEEP_HOST $@ &

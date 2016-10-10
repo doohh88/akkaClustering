@@ -14,8 +14,8 @@ public class PropFactory {
 
 	private static PropFactory instance;
 	private static Properties props;
-	String[] seedList;
-	String seedConf;
+	private String[] seedList;
+	private String seedConf;
 
 	private PropFactory() {	}
 

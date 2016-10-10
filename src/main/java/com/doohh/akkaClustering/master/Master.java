@@ -23,10 +23,9 @@ import lombok.Getter;
 @Getter
 public class Master extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-	Cluster cluster = Cluster.get(getContext().system());
 	public static final String REGISTRATION_TO_MASTER = "Master registrate the worker";
-	Hashtable<Address, Node> workers = new Hashtable<Address, Node>();
-
+	private Cluster cluster = Cluster.get(getContext().system());
+	private Hashtable<Address, Node> workers = new Hashtable<Address, Node>();
 	private ActorRef launcher;
 
 	// subscribe to cluster changes, MemberUp
@@ -72,13 +71,14 @@ public class Master extends UntypedActor {
 		else if (message instanceof AppConf) {
 			AppConf appConf = (AppConf) message;
 			log.info("receive appConf msg: {}", appConf);
+			log.info("getSelf: {}", getSelf());
 			launcher.tell(appConf, getSelf());
+			log.info("send appConf to master");
 			getSender().tell("received UserAppConf instance", getSelf());
 		}
 
 		// query
 		else if (message.equals("getWorkers()")) {
-
 			getSender().tell(workers, getSelf());
 		}
 

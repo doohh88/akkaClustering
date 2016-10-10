@@ -10,22 +10,38 @@ import com.doohh.akkaClustering.deploy.AppConf;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 public class Task extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
 
+	
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof AppConf) {
 			AppConf appConf = (AppConf) message;
-			log.info("i'm task : {}", appConf);
+			log.info("get appConf from worker : {}", appConf);
 			runApp(appConf);
-			getSender().tell("complete task", getSelf());
+			log.info("send msg(complet task) to {}", getSender());
+			Future<Object> future = Patterns.ask(getSender(), "finish()", timeout);
+			String result = (String) Await.result(future, timeout.duration());
 			context().stop(getSelf());
+			log.info("stop the task");
+		}
+		
+		else {
+			log.info("receive unhandled msg");
+			unhandled(message);
 		}
 	}
 
 	void runApp(AppConf appConf) {
+		log.info("running application: {}", appConf);
 		File jarFile = appConf.getJarFile();
 		String classPath = appConf.getClassPath();
 		String[] args = appConf.getArgs();

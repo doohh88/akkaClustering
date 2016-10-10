@@ -20,11 +20,11 @@ import lombok.Getter;
 
 @Getter
 public class Worker extends UntypedActor {
-	public static final String REGISTRATION_TO_WORKER = "Worker registrate the master";
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-	Cluster cluster = Cluster.get(getContext().system());
-	Hashtable<Address, Node> masters = new Hashtable<Address, Node>();
-	AppConf userAppConf;
+	public static final String REGISTRATION_TO_WORKER = "Worker registrate the master";	
+	private Cluster cluster = Cluster.get(getContext().system());
+	private Hashtable<Address, Node> masters = new Hashtable<Address, Node>();
+	private AppConf userAppConf;
 
 	// subscribe to cluster changes, MemberUp
 	@Override
@@ -48,7 +48,7 @@ public class Worker extends UntypedActor {
 		} else if (message instanceof MemberUp) {
 			log.info("received MemberUp msg");
 			MemberUp mUp = (MemberUp) message;
-			log.info("send the msg to the worker for handshaking");
+			log.info("send the msg to the master for handshaking");
 			register(mUp.member());
 		} else if (message instanceof MemberEvent) {
 		}
@@ -60,6 +60,7 @@ public class Worker extends UntypedActor {
 			ActorRef task = context().actorOf(Props.create(Task.class), "task");
 			log.info("generate task for proc");
 
+			log.info("getSender: {}", getSender());
 			task.tell(appConf, getSender());
 		}
 
@@ -75,10 +76,8 @@ public class Worker extends UntypedActor {
 	}
 
 	void register(Member member) {
-		// log.info("register() -> {} : {}",member.roles(), member.address());
 		if (member.hasRole("master")) {
 			getContext().actorSelection(member.address() + "/user/master").tell(REGISTRATION_TO_WORKER, getSelf());
-			// log.info("master(member.address()) : {}", member.address());
 		}
 	}
 }
