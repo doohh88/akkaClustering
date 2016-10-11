@@ -125,7 +125,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 		// init dist configuration
 		// load task.properties & network
-		loadTaskProp();
+		//loadTaskProp();
 	}
 
 	private void initMask() {
@@ -168,6 +168,11 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		} else
 			iter = iterator;
 
+		// communication
+		// pull parameters from master
+		pullParam();
+
+		// cnn -> false
 		if (layerWiseConfigurations.isPretrain()) {
 			pretrain(iter);
 			iter.reset();
@@ -179,13 +184,15 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 				setLabels(next.getLabels());
 				finetune();
 			}
-
 		}
+
 		if (layerWiseConfigurations.isBackprop()) {
 			if (layerWiseConfigurations.isPretrain())
 				iter.reset();
 			update(TaskUtils.buildTask(iter));
 			iter.reset();
+
+			// real training part
 			while (iter.hasNext()) {
 				DataSet next = iter.next();
 				if (next.getFeatureMatrix() == null || next.getLabels() == null)
@@ -202,6 +209,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 					setInput(next.getFeatureMatrix());
 					setLabels(next.getLabels());
 					if (solver == null) {
+						//if SGD -> stepFunction = NegativeGradientStepFunction (default)
 						solver = new Solver.Builder().configure(conf()).listeners(getListeners()).model(this).build();
 					}
 					solver.optimize();
@@ -211,6 +219,9 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 					clearLayerMaskArrays();
 			}
 		}
+
+		// push parameters
+		pushParam();
 	}
 
 	private void update(Task task) {
@@ -221,6 +232,14 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			Environment env = EnvironmentUtils.buildEnvironment();
 			heartbeat.reportEvent(Event.STANDALONE, env, task);
 		}
+	}
+
+	private void pullParam() {
+
+	}
+
+	private void pushParam() {
+
 	}
 
 }
