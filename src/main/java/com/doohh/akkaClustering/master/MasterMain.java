@@ -23,7 +23,7 @@ public class MasterMain {
 	public static void main(String[] args) {
 		Util.parseArgs(args, new MasterMain());
 
-		String seedNodes = PropFactory.getInstance().getSeedConf("master");
+		String seedNodes = PropFactory.getInstance("config.properties").getSeedConf("master");
 		String role = "[master]";
 
 		log.info("Starting distDepp Master");

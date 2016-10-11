@@ -19,9 +19,10 @@ public class WorkerMain {
 	@Option(name = "--port", usage = "port", aliases = "-p")
 	public static String port = "0";
 	public static String systemName = "deepDist";
-
+	public static ActorSystem actorSystem = null; 
+	
 	public static void main(String[] args) {
-		String seedNodes = PropFactory.getInstance().getSeedConf("worker");
+		String seedNodes = PropFactory.getInstance("config.properties").getSeedConf("worker");
 		String role = "[worker]";
 		
 		Util.parseArgs(args, new WorkerMain());
@@ -33,7 +34,7 @@ public class WorkerMain {
 				.withFallback(ConfigFactory.parseString("akka.cluster.roles=" + role))
 				.withFallback(ConfigFactory.load("application"));
 		
-		ActorSystem actorSystem = ActorSystem.create(systemName, conf);
+		actorSystem = ActorSystem.create(systemName, conf);
 		actorSystem.actorOf(Props.create(Worker.class), "worker");
 	}
 }

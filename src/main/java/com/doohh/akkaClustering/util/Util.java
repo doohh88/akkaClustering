@@ -69,4 +69,19 @@ public class Util {
 			e.printStackTrace();
 		}
 	}
+	
+	public static String getHomeDir(){
+		String homeDir = System.getProperty("user.dir");
+		int i = homeDir.lastIndexOf("/bin");
+		if(i != -1){
+			homeDir = homeDir.substring(0, i);
+		}
+		return homeDir;
+	}
+	
+	public static File[] getFileList(String path){
+		File dirFile = new File(path);
+		File[] fileList = dirFile.listFiles();
+		return fileList;
+	}
 }

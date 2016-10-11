@@ -5,7 +5,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import com.doohh.akkaClustering.deploy.AppConf;
-import com.doohh.akkaClustering.util.NetworkInfo;
+import com.doohh.akkaClustering.util.AppNetInfo;
 import com.doohh.akkaClustering.util.Node;
 
 import akka.actor.ActorRef;
@@ -35,7 +35,7 @@ public class Launcher extends UntypedActor {
 	private int nSlaveNode = 0;
 	private ActorRef procNode = null;
 	private AppConf appConf = null;
-	private NetworkInfo networkInfo = null;
+	private AppNetInfo networkInfo = null;
 
 	public Launcher() {
 		ec = context().system().dispatcher();
@@ -114,7 +114,7 @@ public class Launcher extends UntypedActor {
 
 	public ActorRef selectNodes(Hashtable<Address, Node> workers) {
 		List<String> routeePaths = new ArrayList<String>();
-		networkInfo = new NetworkInfo();
+		networkInfo = new AppNetInfo();
 
 		this.nParamNode = this.appConf.getNMaster();
 		this.nSlaveNode = this.appConf.getNWorker();

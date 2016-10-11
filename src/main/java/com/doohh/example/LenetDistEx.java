@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.doohh.nn.DistMultiLayerNetwork;
 
 public class LenetDistEx {
-	private static final Logger log = LoggerFactory.getLogger(LenetDistEx.class);
+	private static final Logger log = LoggerFactory.getLogger(LenetMnistExample.class);
 
     public static void main(String[] args) throws Exception {
         int nChannels = 1;

@@ -3,7 +3,7 @@ package com.doohh.akkaClustering.deploy;
 import java.io.File;
 import java.io.Serializable;
 
-import com.doohh.akkaClustering.util.NetworkInfo;
+import com.doohh.akkaClustering.util.AppNetInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,7 +33,7 @@ public class AppConf implements Serializable {
 	// decide in runtime
 	String role;
 	int roleIdx;
-	NetworkInfo networkInfo;
+	AppNetInfo networkInfo;
 
 	public void setRole(String role) {
 		this.role = role;
@@ -43,7 +43,7 @@ public class AppConf implements Serializable {
 		this.roleIdx = roleIdx;
 	}
 
-	public void setNetworkInfo(NetworkInfo networkInfo) {
+	public void setNetworkInfo(AppNetInfo networkInfo) {
 		this.networkInfo = networkInfo;
 	}
 	

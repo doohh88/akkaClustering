@@ -14,22 +14,19 @@ public class PropFactory {
 
 	private static PropFactory instance;
 	private static Properties props;
+	public static String homeDir = null;
 	private String[] seedList;
 	private String seedConf;
-
+	
 	private PropFactory() {	}
 
-	public static PropFactory getInstance() {
+	public static PropFactory getInstance(String fileName) {
 		if (instance == null) {
 			instance = new PropFactory();
 			props = new Properties();
 			try {
-				String propFile = System.getProperty("user.dir");
-				int i = propFile.lastIndexOf("/bin");
-				if(i != -1){
-					propFile = propFile.substring(0, i);
-				}
-				propFile += "/conf/config.properties";
+				homeDir = Util.getHomeDir();
+				String propFile = homeDir + "/conf/" + fileName;
 				FileInputStream fis = new FileInputStream(propFile);
 				props.load(new java.io.BufferedInputStream(fis));
 			} catch (Exception e) {

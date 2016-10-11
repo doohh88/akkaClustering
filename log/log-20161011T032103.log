@@ -1,2 +1,0 @@
-4576 [main] INFO  c.d.a.deploy.SubmitMain - build appConf: AppConf(hostIP=127.0.0.1, port=2551, jarPath=C:/git/akkaClustering/jars/test-0.0.1-SNAPSHOT.jar, classPath=main.Main, nMaster=1, nWorker=2, args=[args1, args2, args3], masterURL=akka.tcp://deepDist@127.0.0.1:2551/user/master, jarFile=C:\git\akkaClustering\jars\test-0.0.1-SNAPSHOT.jar, role=null, roleIdx=0, networkInfo=null)
-4670 [main] INFO  c.d.a.deploy.SubmitMain - send appConf to submitActor
