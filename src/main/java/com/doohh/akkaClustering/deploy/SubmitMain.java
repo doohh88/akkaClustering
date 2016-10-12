@@ -36,11 +36,13 @@ public class SubmitMain {
 		 args[2] = "-w";
 		 args[3] = "2";
 		 args[4] = "-j";
-		 args[5] = "C:/git/akkaClustering/jars/TestPjt-0.0.1-SNAPSHOT-allinone.jar";
+		 //args[5] = "C:/git/akkaClustering/jars/TestPjt-0.0.1-SNAPSHOT-allinone.jar";
 		 //args[5] = "C:/git/akkaClustering/jars/test-0.0.1-SNAPSHOT.jar";		 
+		 args[5] = "C:/git/akkaClustering/jars/distDeep-core.jar";		 
 		 args[6] = "-c";
-		 args[7] = "TestMain.Main";
+		 //args[7] = "TestMain.Main";
 		 //args[7] = "main.Main";
+		 args[7] = "example.LoadTaskProp";
 		 args[8] = "args1";
 		 args[9] = "args2";
 		 args[10] = "args3";

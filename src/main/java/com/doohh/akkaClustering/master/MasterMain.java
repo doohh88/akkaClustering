@@ -9,6 +9,7 @@ import com.doohh.akkaClustering.util.Util;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 
@@ -34,6 +35,7 @@ public class MasterMain {
 				.withFallback(ConfigFactory.load("application"));
 
 		ActorSystem actorSystem = ActorSystem.create(systemName, conf);
-		actorSystem.actorOf(Props.create(Master.class), "master");
+		ActorRef master = actorSystem.actorOf(Props.create(Master.class), "master");
+		System.out.println(Util.getHomeDir());		
 	}
 }

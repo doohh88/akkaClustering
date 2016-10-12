@@ -24,14 +24,14 @@ public class PropFactory {
 		if (instance == null) {
 			instance = new PropFactory();
 			props = new Properties();
-			try {
-				homeDir = Util.getHomeDir();
-				String propFile = homeDir + "/conf/" + fileName;
-				FileInputStream fis = new FileInputStream(propFile);
-				props.load(new java.io.BufferedInputStream(fis));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		}
+		try {
+			homeDir = Util.getHomeDir();
+			String propFile = homeDir + "/conf/" + fileName;
+			FileInputStream fis = new FileInputStream(propFile);
+			props.load(new java.io.BufferedInputStream(fis));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return instance;
 	}

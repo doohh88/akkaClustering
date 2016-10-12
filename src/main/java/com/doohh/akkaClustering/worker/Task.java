@@ -2,11 +2,11 @@ package com.doohh.akkaClustering.worker;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 
 import com.doohh.akkaClustering.deploy.AppConf;
-import com.doohh.akkaClustering.util.PropFactory;
 import com.doohh.akkaClustering.util.Util;
 
 import akka.actor.ActorSelection;
@@ -27,6 +27,7 @@ public class Task extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof AppConf) {
+			System.out.println(getSender());
 			AppConf appConf = (AppConf) message;
 			log.info("get appConf from worker : {}", appConf);
 			launcher = getContext().actorSelection(getSender().path().address() + "/user/master/launcher");
@@ -39,6 +40,10 @@ public class Task extends UntypedActor {
 			log.info("stop the task");
 		}
 
+		else if (message instanceof String) {
+			log.info("Get message = {}", (String) message);
+		}
+		
 		else {
 			log.info("receive unhandled msg");
 			unhandled(message);
@@ -66,7 +71,7 @@ public class Task extends UntypedActor {
 		String fileName = Util.getHomeDir() + "/conf/task_" + appConf.getRole() + appConf.getRoleIdx() + ".properties";
 		log.info("task.properties's location: {}", fileName);
 		String content = "role=" + appConf.getRole() + "\nroleIdx=" + appConf.getRoleIdx();
-		content += "\ntask=" + getSelf().path();
+		content += "\ntask=" + getSelf();
 		content += "\nparamNodes=";
 		for(String addr : appConf.getNetworkInfo().getParamAddr()){
 			content += addr + ",";

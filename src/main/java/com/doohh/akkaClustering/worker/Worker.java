@@ -2,12 +2,13 @@ package com.doohh.akkaClustering.worker;
 
 import java.util.Hashtable;
 
+import org.nd4j.linalg.api.ndarray.INDArray;
+
 import com.doohh.akkaClustering.deploy.AppConf;
 import com.doohh.akkaClustering.master.Master;
 import com.doohh.akkaClustering.util.Node;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
 import akka.actor.Address;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -59,14 +60,17 @@ public class Worker extends UntypedActor {
 			AppConf appConf = (AppConf) message;
 			log.info("get appConf from master : {}", appConf);
 			getSender().tell("receive appConf from launcher", getSelf());
-			System.out.println("role: " + appConf.getRole() + " idx: " + appConf.getRoleIdx());
-			System.out.println(appConf.getNetworkInfo());
 			ActorRef task = context().actorOf(Props.create(Task.class), "task");
 			log.info("generate task for proc");
-
 			log.info("getSender: {}", getSender());
 			task.tell(appConf, getSender());
 		}
+		
+//		else if (message instanceof INDArray ) {
+//			INDArray a = (INDArray)message;
+//			log.info("nd4j()");
+//			log.info("Get message = {}", a);
+//		}
 
 		else if (message instanceof String) {
 			log.info("Get message = {}", (String) message);

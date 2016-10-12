@@ -35,6 +35,7 @@ import com.doohh.akkaClustering.util.Util;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
 import akka.actor.ActorSelection;
+import lombok.NoArgsConstructor;
 
 public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
@@ -125,7 +126,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 		// init dist configuration
 		// load task.properties & network
-		//loadTaskProp();
+		loadTaskProp();
 	}
 
 	private void initMask() {
@@ -134,18 +135,28 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 	private void loadTaskProp() {
 		String path = Util.getHomeDir() + "/conf";
+		System.out.println(path);
 		File[] fileList = Util.getFileList(path);
-		for (File file : fileList) {
-			if (file.getName().contains("task")) {
-				props = PropFactory.getInstance(file.getName()).getProperties();
-				break;
-			}
+		System.out.println("fileList: " + fileList);
+		for(File file : fileList){
+			System.out.println("hoho");
+			System.out.print(" " + file.getName());
 		}
-
-		this.role = props.getProperty("role");
-		this.roleIdx = props.getProperty("roleIdx");
-		this.task = WorkerMain.actorSystem.actorSelection(props.getProperty("task"));
-		setAppNetInfo();
+		System.out.println();
+		
+//		File confFile = null;
+//		for (File file : fileList) {
+//			if (file.getName().contains("_task")) {
+//				confFile = file;
+//				break;
+//			}
+//		}
+//		props = PropFactory.getInstance(confFile.getName()).getProperties();
+//		this.role = props.getProperty("role");
+//		this.roleIdx = props.getProperty("roleIdx");
+//		this.task = WorkerMain.actorSystem.actorSelection(props.getProperty("task"));
+//		setAppNetInfo();
+//		confFile.delete();		
 	}
 
 	private void setAppNetInfo() {

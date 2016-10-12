@@ -20,6 +20,7 @@ public class WorkerMain {
 	public static String port = "0";
 	public static String systemName = "deepDist";
 	public static ActorSystem actorSystem = null; 
+	public static int n = 0;
 	
 	public static void main(String[] args) {
 		String seedNodes = PropFactory.getInstance("config.properties").getSeedConf("worker");

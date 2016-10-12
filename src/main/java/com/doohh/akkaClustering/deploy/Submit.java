@@ -9,6 +9,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -29,8 +30,8 @@ public class Submit extends UntypedActor {
 		if (message instanceof AppConf) {
 			AppConf appConf = (AppConf) message;
 			log.info("receive appConf: {}", appConf);
-						
 			master = getContext().actorSelection(appConf.masterURL);
+			System.out.println(master);
 			Future<Object> future = Patterns.ask(master, appConf, timeout);
 			log.info("send appConf to master for running");
 
