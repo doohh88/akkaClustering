@@ -34,7 +34,7 @@ public class Task extends UntypedActor {
 			writeTaskProp(appConf);
 			runApp(appConf);
 			log.info("send msg(complet task) to {}", getSender());
-			Future<Object> future = Patterns.ask(launcher, "finish()", timeout);
+			Future<Object> future = Patterns.ask(launcher, "finishTask()", timeout);
 			String result = (String) Await.result(future, timeout.duration());
 			context().stop(getSelf());
 			log.info("stop the task");
@@ -71,7 +71,6 @@ public class Task extends UntypedActor {
 		String fileName = Util.getHomeDir() + "/conf/task_" + appConf.getRole() + appConf.getRoleIdx() + ".properties";
 		log.info("task.properties's location: {}", fileName);
 		String content = "role=" + appConf.getRole() + "\nroleIdx=" + appConf.getRoleIdx();
-		content += "\ntask=" + getSelf();
 		content += "\nparamNodes=";
 		for(String addr : appConf.getNetworkInfo().getParamAddr()){
 			content += addr + ",";

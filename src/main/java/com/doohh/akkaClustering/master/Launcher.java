@@ -54,9 +54,9 @@ public class Launcher extends UntypedActor {
 			f.onFailure(new SayFailure<Object>(), ec);
 		}
 
-		else if (message.equals("finish()")) {
-			workers.get(getSender().path().address()).setProc(false);
-			log.info("workers : {}", workers);
+		else if (message.equals("finishTask()")) {
+			//workers.get(getSender().path().address()).setProc(false);
+			//log.info("workers : {}", workers);
 			getSender().tell("stopTask", getSelf());
 			log.info("send msg(stopTask) to the TaskActor");
 			networkInfo = null;

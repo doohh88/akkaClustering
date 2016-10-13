@@ -10,6 +10,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 
@@ -36,6 +37,5 @@ public class MasterMain {
 
 		ActorSystem actorSystem = ActorSystem.create(systemName, conf);
 		ActorRef master = actorSystem.actorOf(Props.create(Master.class), "master");
-		System.out.println(Util.getHomeDir());		
 	}
 }

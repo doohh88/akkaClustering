@@ -18,7 +18,7 @@ import akka.actor.ActorSystem;
 public class LoadTaskProp {
 	private String role;
 	private String roleIdx;
-	private ActorSelection task;
+	private ActorSelection worker;
 	private AppNetInfo appNetInfo;
 	private Properties props;
 	
@@ -36,18 +36,11 @@ public class LoadTaskProp {
 		System.out.println(confFile);
 		props = PropFactory.getInstance(confFileName).getProperties();
 		this.role = props.getProperty("role");
-		System.out.println(role);
 		this.roleIdx = props.getProperty("roleIdx");
-		System.out.println(roleIdx);
-		String taskAddr = props.getProperty("task");
-		taskAddr = taskAddr.substring(6, taskAddr.length() - 1);
-		System.out.println(taskAddr);
-		System.out.println(WorkerMain.actorSystem);
-		this.task = WorkerMain.actorSystem.actorSelection("/user/worker/task");
-		System.out.println(this.task);
-		this.task.tell("hello i'm application", ActorRef.noSender());
+		this.worker = WorkerMain.actorSystem.actorSelection("/user/worker");
+		this.worker.tell("hello i'm application", ActorRef.noSender());
 		setAppNetInfo();
-		//confFile.delete();
+		confFile.delete();
 	}
 
 	private void setAppNetInfo() {

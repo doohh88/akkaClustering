@@ -34,6 +34,7 @@ import com.doohh.akkaClustering.util.PropFactory;
 import com.doohh.akkaClustering.util.Util;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import lombok.NoArgsConstructor;
 
@@ -44,7 +45,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private String role = null;
 	private String roleIdx = null;
 	private AppNetInfo appNetInfo = null;
-	private ActorSelection task = null;
+	private ActorSelection worker = null;
 
 	public DistMultiLayerNetwork(MultiLayerConfiguration conf) {
 		super(conf);
@@ -135,28 +136,23 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 	private void loadTaskProp() {
 		String path = Util.getHomeDir() + "/conf";
-		System.out.println(path);
 		File[] fileList = Util.getFileList(path);
-		System.out.println("fileList: " + fileList);
+		ArrayList<File> confFiles = new ArrayList<File>();
 		for(File file : fileList){
-			System.out.println("hoho");
-			System.out.print(" " + file.getName());
+			if (file.getName().contains("task_")) {
+				confFiles.add(file);
+			}
 		}
-		System.out.println();
-		
-//		File confFile = null;
-//		for (File file : fileList) {
-//			if (file.getName().contains("_task")) {
-//				confFile = file;
-//				break;
-//			}
-//		}
-//		props = PropFactory.getInstance(confFile.getName()).getProperties();
-//		this.role = props.getProperty("role");
-//		this.roleIdx = props.getProperty("roleIdx");
-//		this.task = WorkerMain.actorSystem.actorSelection(props.getProperty("task"));
-//		setAppNetInfo();
-//		confFile.delete();		
+		File confFile = confFiles.get(WorkerMain.n++);
+		String confFileName = confFile.getName();
+		System.out.println(confFile);
+		props = PropFactory.getInstance(confFileName).getProperties();
+		this.role = props.getProperty("role");
+		this.roleIdx = props.getProperty("roleIdx");
+		this.worker = WorkerMain.actorSystem.actorSelection("/user/worker");
+		this.worker.tell("hello i'm application", ActorRef.noSender());
+		setAppNetInfo();
+		confFile.delete();
 	}
 
 	private void setAppNetInfo() {
