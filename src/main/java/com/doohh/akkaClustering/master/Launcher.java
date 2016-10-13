@@ -6,9 +6,11 @@ import java.util.List;
 
 import com.doohh.akkaClustering.deploy.AppConf;
 import com.doohh.akkaClustering.util.AppNetInfo;
+import com.doohh.akkaClustering.util.Command;
 import com.doohh.akkaClustering.util.Node;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.Address;
 import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
@@ -36,35 +38,47 @@ public class Launcher extends UntypedActor {
 	private ActorRef procNode = null;
 	private AppConf appConf = null;
 	private AppNetInfo networkInfo = null;
+	private ActorSelection resourceMngr = null;
 
 	public Launcher() {
 		ec = context().system().dispatcher();
 	}
+	
+	@Override
+	public void preStart() throws Exception {
+		resourceMngr = getContext().actorSelection("/user/master/resourceMngr");
+	}
 
 	@Override
 	public void onReceive(Object message) throws Throwable {
-		if (message instanceof AppConf) {
-			this.appConf = (AppConf) message;
-			log.info("receive appConf msg from mater: {}", appConf);
-			Future<Object> f = Patterns.ask(getSender(), "getWorkers()", timeout);
-			log.info("request worker list");
+		if (message instanceof Command) {
+			Command cmd = (Command) message;
+			if(cmd.getCommand().equals("submit()")){
+				this.appConf = (AppConf) cmd.getData();
+				log.info("received command msg from mater: {}", cmd);
+				Future<Object> f = Patterns.ask(resourceMngr, new Command("getResource()", null), timeout);
+				log.info("requested worker list");
 
-			f.onSuccess(new SaySuccess<Object>(), ec);
-			f.onComplete(new SayComplete<Object>(), ec);
-			f.onFailure(new SayFailure<Object>(), ec);
+				f.onSuccess(new SaySuccess<Object>(), ec);
+				f.onComplete(new SayComplete<Object>(), ec);
+				f.onFailure(new SayFailure<Object>(), ec);
+			}
+
 		}
 
-		else if (message.equals("finishTask()")) {
-			//workers.get(getSender().path().address()).setProc(false);
-			//log.info("workers : {}", workers);
-			getSender().tell("stopTask", getSelf());
-			log.info("send msg(stopTask) to the TaskActor");
-			networkInfo = null;
-		}
+//		else if (message.equals("finishTask()")) {
+//			//workers.get(getSender().path().address()).setProc(false);
+//			//log.info("workers : {}", workers);
+//			getSender().tell("stopTask", getSelf());
+//			log.info("send msg(stopTask) to the TaskActor");
+//			networkInfo = null;
+//		}
 
-		else {
+		else if (message instanceof String) {
+			log.info("received msg = {}", (String) message);
+		} else {
+			log.info("received unhandled msg");
 			unhandled(message);
-
 		}
 	}
 

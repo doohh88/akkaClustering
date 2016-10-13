@@ -22,7 +22,7 @@ import scala.concurrent.duration.Duration;
 public class Task extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
-	private ActorSelection launcher = null;
+	private ActorSelection master = null;
 
 	@Override
 	public void onReceive(Object message) throws Throwable {
@@ -30,22 +30,23 @@ public class Task extends UntypedActor {
 			System.out.println(getSender());
 			AppConf appConf = (AppConf) message;
 			log.info("get appConf from worker : {}", appConf);
-			launcher = getContext().actorSelection(getSender().path().address() + "/user/master/launcher");
+			master = getContext().actorSelection(getSender().path().address() + "/user/master");
 			writeTaskProp(appConf);
+			//*******************
+			//running application
 			runApp(appConf);
+			//*******************
 			log.info("send msg(complet task) to {}", getSender());
-			Future<Object> future = Patterns.ask(launcher, "finishTask()", timeout);
+			Future<Object> future = Patterns.ask(master, "finishApp()", timeout);
 			String result = (String) Await.result(future, timeout.duration());
 			context().stop(getSelf());
 			log.info("stop the task");
 		}
 
 		else if (message instanceof String) {
-			log.info("Get message = {}", (String) message);
-		}
-		
-		else {
-			log.info("receive unhandled msg");
+			log.info("received msg = {}", (String) message);
+		} else {
+			log.info("received unhandled msg");
 			unhandled(message);
 		}
 	}

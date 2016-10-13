@@ -1,5 +1,7 @@
 package com.doohh.akkaClustering.deploy;
 
+import com.doohh.akkaClustering.util.Command;
+
 import akka.actor.ActorSelection;
 import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
@@ -9,7 +11,6 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -27,20 +28,25 @@ public class Submit extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		// send AppConf to master. After sending, shut down the Submit actor
-		if (message instanceof AppConf) {
-			AppConf appConf = (AppConf) message;
-			log.info("receive appConf: {}", appConf);
-			master = getContext().actorSelection(appConf.masterURL);
-			System.out.println(master);
-			Future<Object> future = Patterns.ask(master, appConf, timeout);
-			log.info("send appConf to master for running");
+		if (message instanceof Command) {
+			Command cmd = (Command) message;
+			log.info("received command: {}", cmd);
+			if(cmd.getCommand().equals("submit()")){
+				AppConf appConf = (AppConf) cmd.getData();				
+				master = getContext().actorSelection(appConf.masterURL);
+				Future<Object> future = Patterns.ask(master, cmd, timeout);
+				log.info("sended commnad to master for running: {}", cmd);
 
-			future.onSuccess(new SaySuccess<Object>(), ec);
-			future.onComplete(new SayComplete<Object>(), ec);
-			future.onFailure(new SayFailure<Object>(), ec);
-
+				future.onSuccess(new SaySuccess<Object>(), ec);
+				future.onComplete(new SayComplete<Object>(), ec);
+				future.onFailure(new SayFailure<Object>(), ec);
+			}			
+		} 
+		
+		else if (message instanceof String) {
+			log.info("received msg = {}", (String) message);
 		} else {
-			log.info("receive unhandled msg");
+			log.info("received unhandled msg");
 			unhandled(message);
 		}
 	}
@@ -63,8 +69,8 @@ public class Submit extends UntypedActor {
 		@Override
 		public final void onComplete(Throwable t, T result) {
 			log.info("Completed.");
-			log.info("shut down submit process");
-			getContext().system().shutdown();
+			log.info("terminate submit process");
+			getContext().system().terminate();
 		}
 	}
 }

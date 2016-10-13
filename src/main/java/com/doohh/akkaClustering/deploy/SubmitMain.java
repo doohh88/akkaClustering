@@ -4,6 +4,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.doohh.akkaClustering.util.Command;
 import com.doohh.akkaClustering.util.Util;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -11,10 +12,12 @@ import com.typesafe.config.ConfigFactory;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 public class SubmitMain {
 	private static final Logger log = LoggerFactory.getLogger(SubmitMain.class);
-
+	
 	@Option(name = "--hostIP", usage = "hostIP", aliases = "-h")
 	public static String hostIP = "127.0.0.1";
 	@Option(name = "--port", usage = "port", aliases = "-p")
@@ -29,7 +32,7 @@ public class SubmitMain {
 	public static int nWorker = 1;
 
 	public static void main(String[] args) {
-		// test
+		//****************************************************************************
 		 args = new String[11];
 		 args[0] = "-m";
 		 args[1] = "1";
@@ -46,7 +49,8 @@ public class SubmitMain {
 		 args[8] = "args1";
 		 args[9] = "args2";
 		 args[10] = "args3";
-
+		//****************************************************************************
+		 
 		String[] appArgs = Util.parseArgs(args, new SubmitMain(), "-c");
 		if (jarPath == null || classPath == null) {
 			log.error("please input --jar & --class option");
@@ -59,9 +63,10 @@ public class SubmitMain {
 				
 		AppConf appConf = new AppConf.Builder().hostIP(hostIP).port(port).jarPath(jarPath).classPath(classPath)
 				.nMaster(nMaster).nWorker(nWorker).args(appArgs).build();
-		log.info("build appConf: {}", appConf);
+		log.info("builded appConf: {}", appConf);
 
-		submit.tell(appConf, ActorRef.noSender());
-		log.info("send appConf to submitActor");
+		Command cmd = new Command("submit()", appConf);
+		submit.tell(cmd, ActorRef.noSender());
+		log.info("sended Command to submitActor: {}", cmd);
 	}
 }

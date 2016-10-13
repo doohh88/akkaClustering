@@ -73,11 +73,9 @@ public class Worker extends UntypedActor {
 //		}
 
 		else if (message instanceof String) {
-			log.info("Get message = {}", (String) message);
-		}
-
-		else {
-			log.info("receive unhandled msg");
+			log.info("received msg = {}", (String) message);
+		} else {
+			log.info("received unhandled msg");
 			unhandled(message);
 		}
 
