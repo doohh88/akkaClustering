@@ -59,11 +59,7 @@ public class Worker extends UntypedActor {
 		else if (message instanceof Command) {
 			Command cmd = (Command)message;
 			if(cmd.getCommand().equals("submit()")){
-				//System.out.println("getSender(): " + getSender().path());
-//				ActorSelection launcher = getContext().actorSelection(getSender().path() + "/user/master/launcher");				
-				//launcher.tell("receive appConf from launcher", getSelf());
-				getSender().tell("receive appConf from launcher", getSelf());
-				
+				getSender().tell("receive appConf from launcher", getSelf());				
 				AppConf appConf = (AppConf)cmd.getData();
 				log.info("get appConf from master : {}", appConf);
 				ActorRef task = context().actorOf(Props.create(Task.class), "task");
@@ -72,12 +68,6 @@ public class Worker extends UntypedActor {
 				task.tell(appConf, getSender());	
 			}
 		}
-		
-//		else if (message instanceof INDArray ) {
-//			INDArray a = (INDArray)message;
-//			log.info("nd4j()");
-//			log.info("Get message = {}", a);
-//		}
 
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);

@@ -21,10 +21,10 @@ public class RouterInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private ActorRef router;
-	private List<String> paramAddr = null;
-	private List<String> slaveAddr = null;
-	private ArrayList<ActorSelection> paramNodes = null;
-	private ArrayList<ActorSelection> slaveNodes = null;
+	private ArrayList<String> paramAddr = null;
+	private ArrayList<String> slaveAddr = null;
+	private ArrayList<ActorSelection> paramAgents = null;
+	private ArrayList<ActorSelection> slaveAgents = null;
 
 	public RouterInfo() {
 		paramAddr = new ArrayList<String>();
@@ -32,11 +32,13 @@ public class RouterInfo implements Serializable {
 	}
 
 	public void setActorSelection() {
+		paramAgents = new ArrayList<ActorSelection>();
+		slaveAgents = new ArrayList<ActorSelection>();
 		for (String addr : paramAddr) {
-			paramNodes.add(WorkerMain.actorSystem.actorSelection(addr));
+			paramAgents.add(WorkerMain.actorSystem.actorSelection(addr));
 		}
 		for (String addr : slaveAddr) {
-			slaveNodes.add(WorkerMain.actorSystem.actorSelection(addr));
+			slaveAgents.add(WorkerMain.actorSystem.actorSelection(addr));
 		}
 	}
 }

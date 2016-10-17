@@ -2,6 +2,7 @@ package com.doohh.nn;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -44,8 +45,8 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private static Properties props;
 	private String role = null;
 	private String roleIdx = null;
-	private RouterInfo appNetInfo = null;
-	private ActorSelection worker = null;
+	private RouterInfo routerInfo = null;
+	private ActorSelection task = null;
 
 	public DistMultiLayerNetwork(MultiLayerConfiguration conf) {
 		super(conf);
@@ -135,33 +136,35 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	}
 
 	private void loadTaskProp() {
+		// read confFile
 		String path = Util.getHomeDir() + "/conf";
 		File[] fileList = Util.getFileList(path);
 		ArrayList<File> confFiles = new ArrayList<File>();
-		for(File file : fileList){
+		for (File file : fileList) {
 			if (file.getName().contains("task_")) {
 				confFiles.add(file);
 			}
 		}
-		File confFile = confFiles.get(WorkerMain.n++);
+		File confFile = confFiles.get(WorkerMain.n++); // if window
 		String confFileName = confFile.getName();
 		System.out.println(confFile);
 		props = PropFactory.getInstance(confFileName).getProperties();
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
-		this.worker = WorkerMain.actorSystem.actorSelection("/user/worker");
-		this.worker.tell("hello i'm application", ActorRef.noSender());
-		setAppNetInfo();
+		this.task = WorkerMain.actorSystem.actorSelection("/user/worker/task");
+		setNetforProc();
+
+		// remove confFile after reading it
 		confFile.delete();
 	}
 
-	private void setAppNetInfo() {
-		this.appNetInfo = new RouterInfo();
+	private void setNetforProc() {
+		this.routerInfo = new RouterInfo();
 		String paramAddrs = props.getProperty("paramNodes");
-		this.appNetInfo.getParamAddr().toArray(new String(paramAddrs).split(","));
+		this.routerInfo.setParamAddr(new ArrayList<String>(Arrays.asList(new String(paramAddrs).split(","))));
 		String slaveAddrs = props.getProperty("slaveNodes");
-		this.appNetInfo.getParamAddr().toArray(new String(slaveAddrs).split(","));
-		this.appNetInfo.setActorSelection();
+		this.routerInfo.setSlaveAddr(new ArrayList<String>(Arrays.asList(new String(slaveAddrs).split(","))));
+		this.routerInfo.setActorSelection();
 	}
 
 	@Override
@@ -174,10 +177,6 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			iter = new AsyncDataSetIterator(iterator, 2);
 		} else
 			iter = iterator;
-
-		// communication
-		// pull parameters from master
-		pullParam();
 
 		// cnn -> false
 		if (layerWiseConfigurations.isPretrain()) {
@@ -201,6 +200,11 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 			// real training part
 			while (iter.hasNext()) {
+				// communication
+				// pull parameters from master
+				pullParam();
+				
+				
 				DataSet next = iter.next();
 				if (next.getFeatureMatrix() == null || next.getLabels() == null)
 					break;
@@ -216,7 +220,8 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 					setInput(next.getFeatureMatrix());
 					setLabels(next.getLabels());
 					if (solver == null) {
-						//if SGD -> stepFunction = NegativeGradientStepFunction (default)
+						// if SGD -> stepFunction = NegativeGradientStepFunction
+						// (default)
 						solver = new Solver.Builder().configure(conf()).listeners(getListeners()).model(this).build();
 					}
 					solver.optimize();
@@ -228,7 +233,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		}
 
 		// push parameters
-		pushParam();
+		pushGradient();
 	}
 
 	private void update(Task task) {
@@ -245,8 +250,8 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 	}
 
-	private void pushParam() {
-
+	private void pushGradient() {
+		
 	}
 
 }

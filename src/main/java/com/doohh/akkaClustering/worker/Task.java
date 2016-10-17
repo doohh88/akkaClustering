@@ -8,7 +8,9 @@ import java.net.URLClassLoader;
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.util.Util;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
 import akka.dispatch.OnFailure;
@@ -17,18 +19,26 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import example.DistLenet;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 public class Task extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
+
 	private ActorSelection master = null;
+	private ActorRef agent = null;
 	private final ExecutionContext ec;
+	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
 
 	public Task() {
 		ec = context().system().dispatcher();
+	}
+
+	@Override
+	public void preStart() throws Exception {
+		this.agent = context().actorOf(Props.create(Agent.class), "agent");
 	}
 
 	@Override
@@ -38,12 +48,14 @@ public class Task extends UntypedActor {
 			log.info("get appConf from worker : {}", appConf);
 			master = getContext().actorSelection(getSender().path().address() + "/user/master");
 			writeTaskProp(appConf);
-			
+
 			// *******************
 			// running application
-			runApp(appConf);
+			//runApp(appConf);
+			//new LoadTaskProp().main(null);
+			new DistLenet().main(null);
 			// *******************
-			
+
 			log.info("send msg(complet task) to {}", getSender());
 			Future<Object> future = Patterns.ask(master, "finishApp()", timeout);
 			future.onSuccess(new OnSuccess<Object>() {
@@ -101,12 +113,12 @@ public class Task extends UntypedActor {
 		String content = "role=" + appConf.getRole() + "\nroleIdx=" + appConf.getRoleIdx();
 		content += "\nparamNodes=";
 		for (String addr : appConf.getRouterInfo().getParamAddr()) {
-			content += addr + ",";
+			content += addr + "/task/agent,";
 		}
 		content = content.substring(0, content.length() - 1);
 		content += "\nslaveNodes=";
 		for (String addr : appConf.getRouterInfo().getSlaveAddr()) {
-			content += addr + ",";
+			content += addr + "/task/agent,";
 		}
 		content = content.substring(0, content.length() - 1);
 		Util.write(fileName, content);
