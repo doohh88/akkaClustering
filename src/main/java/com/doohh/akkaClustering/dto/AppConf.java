@@ -1,9 +1,7 @@
-package com.doohh.akkaClustering.deploy;
+package com.doohh.akkaClustering.dto;
 
 import java.io.File;
 import java.io.Serializable;
-
-import com.doohh.akkaClustering.util.AppNetInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +15,7 @@ public class AppConf implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	String hostIP;
 	String port;
 	String jarPath;
@@ -33,7 +31,7 @@ public class AppConf implements Serializable {
 	// decide in runtime
 	String role;
 	int roleIdx;
-	AppNetInfo networkInfo;
+	RouterInfo routerInfo;
 
 	public void setRole(String role) {
 		this.role = role;
@@ -43,10 +41,10 @@ public class AppConf implements Serializable {
 		this.roleIdx = roleIdx;
 	}
 
-	public void setNetworkInfo(AppNetInfo networkInfo) {
-		this.networkInfo = networkInfo;
+	public void setRouterInfo(RouterInfo routerInfo) {
+		this.routerInfo = routerInfo;
 	}
-	
+
 	private AppConf(Builder builder) {
 		hostIP = builder.hostIP;
 		port = builder.port;

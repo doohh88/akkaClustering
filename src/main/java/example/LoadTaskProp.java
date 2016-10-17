@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import com.doohh.akkaClustering.util.AppNetInfo;
+import com.doohh.akkaClustering.dto.RouterInfo;
 import com.doohh.akkaClustering.util.PropFactory;
 import com.doohh.akkaClustering.util.Util;
 import com.doohh.akkaClustering.worker.WorkerMain;
@@ -19,7 +19,7 @@ public class LoadTaskProp {
 	private String role;
 	private String roleIdx;
 	private ActorSelection worker;
-	private AppNetInfo appNetInfo;
+	private RouterInfo appNetInfo;
 	private Properties props;
 	
 	private void loadTaskProp() {
@@ -44,7 +44,7 @@ public class LoadTaskProp {
 	}
 
 	private void setAppNetInfo() {
-		this.appNetInfo = new AppNetInfo();
+		this.appNetInfo = new RouterInfo();
 		String paramAddrs = props.getProperty("paramNodes");
 		this.appNetInfo.getParamAddr().toArray(new String(paramAddrs).split(","));
 		String slaveAddrs = props.getProperty("slaveNodes");

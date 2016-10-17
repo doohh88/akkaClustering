@@ -2,13 +2,13 @@ package com.doohh.akkaClustering.worker;
 
 import java.util.Hashtable;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
-
-import com.doohh.akkaClustering.deploy.AppConf;
+import com.doohh.akkaClustering.dto.AppConf;
+import com.doohh.akkaClustering.dto.Command;
+import com.doohh.akkaClustering.dto.Node;
 import com.doohh.akkaClustering.master.Master;
-import com.doohh.akkaClustering.util.Node;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.Address;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -56,14 +56,21 @@ public class Worker extends UntypedActor {
 		} else if (message instanceof MemberEvent) {
 		}
 
-		else if (message instanceof AppConf) {
-			AppConf appConf = (AppConf) message;
-			log.info("get appConf from master : {}", appConf);
-			getSender().tell("receive appConf from launcher", getSelf());
-			ActorRef task = context().actorOf(Props.create(Task.class), "task");
-			log.info("generate task for proc");
-			log.info("getSender: {}", getSender());
-			task.tell(appConf, getSender());
+		else if (message instanceof Command) {
+			Command cmd = (Command)message;
+			if(cmd.getCommand().equals("submit()")){
+				//System.out.println("getSender(): " + getSender().path());
+//				ActorSelection launcher = getContext().actorSelection(getSender().path() + "/user/master/launcher");				
+				//launcher.tell("receive appConf from launcher", getSelf());
+				getSender().tell("receive appConf from launcher", getSelf());
+				
+				AppConf appConf = (AppConf)cmd.getData();
+				log.info("get appConf from master : {}", appConf);
+				ActorRef task = context().actorOf(Props.create(Task.class), "task");
+				log.info("generate task for proc");
+				log.info("getSender: {}", getSender());
+				task.tell(appConf, getSender());	
+			}
 		}
 		
 //		else if (message instanceof INDArray ) {

@@ -1,6 +1,7 @@
 package com.doohh.akkaClustering.deploy;
 
-import com.doohh.akkaClustering.util.Command;
+import com.doohh.akkaClustering.dto.AppConf;
+import com.doohh.akkaClustering.dto.Command;
 
 import akka.actor.ActorSelection;
 import akka.actor.UntypedActor;
@@ -31,46 +32,43 @@ public class Submit extends UntypedActor {
 		if (message instanceof Command) {
 			Command cmd = (Command) message;
 			log.info("received command: {}", cmd);
-			if(cmd.getCommand().equals("submit()")){
-				AppConf appConf = (AppConf) cmd.getData();				
-				master = getContext().actorSelection(appConf.masterURL);
-				Future<Object> future = Patterns.ask(master, cmd, timeout);
+			if (cmd.getCommand().equals("submit()")) {
+				AppConf appConf = (AppConf) cmd.getData();
+				master = getContext().actorSelection(appConf.getMasterURL());
+				Future<Object> ack = Patterns.ask(master, cmd, timeout);
 				log.info("sended commnad to master for running: {}", cmd);
 
-				future.onSuccess(new SaySuccess<Object>(), ec);
-				future.onComplete(new SayComplete<Object>(), ec);
-				future.onFailure(new SayFailure<Object>(), ec);
-			}			
-		} 
-		
+				ack.onSuccess(new OnSuccess<Object>() {
+					@Override
+					public void onSuccess(Object result) throws Throwable {
+						log.info("Succeeded sending with: " + result);
+					}
+
+				}, ec);
+
+				ack.onFailure(new OnFailure() {
+					@Override
+					public void onFailure(Throwable t) throws Throwable {
+						log.info("Failed to send with: " + t);
+					}
+				}, ec);
+
+				ack.onComplete(new OnComplete<Object>() {
+					@Override
+					public void onComplete(Throwable t, Object result) throws Throwable {
+						log.info("Completed.");
+						log.info("terminate submit process");
+						getContext().system().terminate();
+					}
+				}, ec);
+			}
+		}
+
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
 		} else {
 			log.info("received unhandled msg");
 			unhandled(message);
-		}
-	}
-
-	public final class SaySuccess<T> extends OnSuccess<T> {
-		@Override
-		public final void onSuccess(T result) {
-			log.info("Succeeded sending with " + result);
-		}
-	}
-
-	public final class SayFailure<T> extends OnFailure {
-		@Override
-		public final void onFailure(Throwable t) {
-			log.info("Failed to send with " + t);
-		}
-	}
-
-	public final class SayComplete<T> extends OnComplete<T> {
-		@Override
-		public final void onComplete(Throwable t, T result) {
-			log.info("Completed.");
-			log.info("terminate submit process");
-			getContext().system().terminate();
 		}
 	}
 }

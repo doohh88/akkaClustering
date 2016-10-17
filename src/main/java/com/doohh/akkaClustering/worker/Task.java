@@ -2,20 +2,22 @@ package com.doohh.akkaClustering.worker;
 
 import java.io.File;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import com.doohh.akkaClustering.deploy.AppConf;
+import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.util.Util;
 
 import akka.actor.ActorSelection;
 import akka.actor.UntypedActor;
+import akka.dispatch.OnComplete;
+import akka.dispatch.OnFailure;
+import akka.dispatch.OnSuccess;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-import scala.concurrent.Await;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
@@ -23,24 +25,49 @@ public class Task extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
 	private ActorSelection master = null;
+	private final ExecutionContext ec;
+
+	public Task() {
+		ec = context().system().dispatcher();
+	}
 
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof AppConf) {
-			System.out.println(getSender());
 			AppConf appConf = (AppConf) message;
 			log.info("get appConf from worker : {}", appConf);
 			master = getContext().actorSelection(getSender().path().address() + "/user/master");
 			writeTaskProp(appConf);
-			//*******************
-			//running application
+			
+			// *******************
+			// running application
 			runApp(appConf);
-			//*******************
+			// *******************
+			
 			log.info("send msg(complet task) to {}", getSender());
 			Future<Object> future = Patterns.ask(master, "finishApp()", timeout);
-			String result = (String) Await.result(future, timeout.duration());
-			context().stop(getSelf());
-			log.info("stop the task");
+			future.onSuccess(new OnSuccess<Object>() {
+				@Override
+				public void onSuccess(Object result) throws Throwable {
+					log.info("Succeeded sending with: " + result);
+				}
+			}, ec);
+
+			future.onFailure(new OnFailure() {
+				@Override
+				public void onFailure(Throwable t) throws Throwable {
+					log.info("Failed to send with: " + t);
+				}
+			}, ec);
+
+			future.onComplete(new OnComplete<Object>() {
+				@Override
+				public void onComplete(Throwable t, Object result) throws Throwable {
+					log.info("Completed.");
+					context().stop(getSelf());
+					log.info("stop the task");
+				}
+			}, ec);
 		}
 
 		else if (message instanceof String) {
@@ -73,12 +100,12 @@ public class Task extends UntypedActor {
 		log.info("task.properties's location: {}", fileName);
 		String content = "role=" + appConf.getRole() + "\nroleIdx=" + appConf.getRoleIdx();
 		content += "\nparamNodes=";
-		for(String addr : appConf.getNetworkInfo().getParamAddr()){
+		for (String addr : appConf.getRouterInfo().getParamAddr()) {
 			content += addr + ",";
 		}
 		content = content.substring(0, content.length() - 1);
 		content += "\nslaveNodes=";
-		for(String addr : appConf.getNetworkInfo().getSlaveAddr()){
+		for (String addr : appConf.getRouterInfo().getSlaveAddr()) {
 			content += addr + ",";
 		}
 		content = content.substring(0, content.length() - 1);

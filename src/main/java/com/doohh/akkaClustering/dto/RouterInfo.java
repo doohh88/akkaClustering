@@ -1,4 +1,4 @@
-package com.doohh.akkaClustering.util;
+package com.doohh.akkaClustering.dto;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -6,25 +6,27 @@ import java.util.List;
 
 import com.doohh.akkaClustering.worker.WorkerMain;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import lombok.Data;
 import lombok.ToString;
 
 @Data
 @ToString
-public class AppNetInfo implements Serializable {
+public class RouterInfo implements Serializable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private ActorRef router;
 	private List<String> paramAddr = null;
 	private List<String> slaveAddr = null;
 	private ArrayList<ActorSelection> paramNodes = null;
 	private ArrayList<ActorSelection> slaveNodes = null;
 
-	public AppNetInfo() {
+	public RouterInfo() {
 		paramAddr = new ArrayList<String>();
 		slaveAddr = new ArrayList<String>();
 	}

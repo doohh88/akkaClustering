@@ -1,17 +1,11 @@
 package com.doohh.akkaClustering.master;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-
-import com.doohh.akkaClustering.deploy.AppConf;
-import com.doohh.akkaClustering.util.AppNetInfo;
-import com.doohh.akkaClustering.util.Command;
-import com.doohh.akkaClustering.util.Node;
+import com.doohh.akkaClustering.dto.AppConf;
+import com.doohh.akkaClustering.dto.Command;
+import com.doohh.akkaClustering.dto.RouterInfo;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
-import akka.actor.Address;
 import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
 import akka.dispatch.OnFailure;
@@ -19,7 +13,6 @@ import akka.dispatch.OnSuccess;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
-import akka.routing.RoundRobinGroup;
 import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
@@ -31,19 +24,12 @@ public class Launcher extends UntypedActor {
 
 	private Timeout timeout = new Timeout(Duration.create(5, "seconds"));
 	private final ExecutionContext ec;
-	private Hashtable<Address, Node> workers = new Hashtable<Address, Node>();
-	private int nProcNodes = 0;
-	private int nParamNode = 0;
-	private int nSlaveNode = 0;
-	private ActorRef procNode = null;
-	private AppConf appConf = null;
-	private AppNetInfo networkInfo = null;
 	private ActorSelection resourceMngr = null;
 
 	public Launcher() {
 		ec = context().system().dispatcher();
 	}
-	
+
 	@Override
 	public void preStart() throws Exception {
 		resourceMngr = getContext().actorSelection("/user/master/resourceMngr");
@@ -53,26 +39,42 @@ public class Launcher extends UntypedActor {
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof Command) {
 			Command cmd = (Command) message;
-			if(cmd.getCommand().equals("submit()")){
-				this.appConf = (AppConf) cmd.getData();
+			if (cmd.getCommand().equals("submit()")) {
+				AppConf appConf = (AppConf) cmd.getData();
 				log.info("received command msg from mater: {}", cmd);
-				Future<Object> f = Patterns.ask(resourceMngr, new Command("getResource()", null), timeout);
-				log.info("requested worker list");
 
-				f.onSuccess(new SaySuccess<Object>(), ec);
-				f.onComplete(new SayComplete<Object>(), ec);
-				f.onFailure(new SayFailure<Object>(), ec);
+				log.info("requested router for deployment");
+				Future<Object> routerInfo = Patterns.ask(resourceMngr, new Command("getResource()", appConf), timeout);
+				routerInfo.onSuccess(new OnSuccess<Object>() {
+					@Override
+					public void onSuccess(Object routerInfo) throws Throwable {
+						log.info("Succeeded with " + routerInfo);
+						try {
+							deployAppConfwithSetting(appConf, (RouterInfo) routerInfo);
+						} catch (Exception e) {
+							e.printStackTrace();
+						} finally {
+							// remove router
+							context().stop(((RouterInfo) routerInfo).getRouter());
+						}
+					}
+				}, ec);
+				routerInfo.onFailure(new OnFailure() {
+					@Override
+					public void onFailure(Throwable t) throws Throwable {
+						log.info("Failed to send with: " + t);
+					}
+				}, ec);
+
+				routerInfo.onComplete(new OnComplete<Object>() {
+					@Override
+					public void onComplete(Throwable t, Object routerInfo) throws Throwable {
+						log.info("Completed.");
+					}
+				}, ec);
 			}
 
 		}
-
-//		else if (message.equals("finishTask()")) {
-//			//workers.get(getSender().path().address()).setProc(false);
-//			//log.info("workers : {}", workers);
-//			getSender().tell("stopTask", getSelf());
-//			log.info("send msg(stopTask) to the TaskActor");
-//			networkInfo = null;
-//		}
 
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
@@ -82,80 +84,30 @@ public class Launcher extends UntypedActor {
 		}
 	}
 
-	public final class SaySuccess<T> extends OnSuccess<T> {
-		@Override
-		public final void onSuccess(T result) {
-			log.info("Succeeded with " + result);
-			workers = (Hashtable<Address, Node>) result;
-			procNode = selectNodes(workers);
-			appConf.setNetworkInfo(networkInfo);
+	private void deployAppConfwithSetting(AppConf appConf, RouterInfo routerInfo) throws Throwable {
+		ActorRef procNodes = routerInfo.getRouter();
 
-			try {
-				for (int i = 0; i < nProcNodes; i++) {
-					// ex. role: param, roleIdx: 0
-					if (i < nParamNode) {
-						appConf.setRole("param");
-						appConf.setRoleIdx(i);
-					} else {
-						appConf.setRole("slave");
-						appConf.setRoleIdx(i - nParamNode);
-					}
-					log.info("send appConf to worker: {}", procNode);
-					Future<Object> future = Patterns.ask(procNode, appConf, timeout);
-					String rst = (String) Await.result(future, timeout.duration());
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				context().stop(procNode);
+		// send appConf to router
+		int nProcNodes = appConf.getNMaster() + appConf.getNWorker();
+		int nParamNodes = appConf.getNMaster();
+		Command cmd = new Command().setCommand("submit()");
+
+		appConf.setRouterInfo(routerInfo); // set routerInfo
+		for (int i = 0; i < nProcNodes; i++) {
+			// set Role. role: param, roleIdx: 0
+			if (i < nParamNodes) {
+				appConf.setRole("param");
+				appConf.setRoleIdx(i);
+			} else {
+				appConf.setRole("slave");
+				appConf.setRoleIdx(i - nParamNodes);
 			}
+
+			log.info("send appConf to worker: {}", procNodes);
+			Future<Object> future = Patterns.ask(procNodes, cmd.setData(appConf), timeout);
+			String ack = (String) Await.result(future, timeout.duration());
+			log.info("get ack: {}", ack);
 		}
 	}
 
-	public final class SayFailure<T> extends OnFailure {
-		@Override
-		public final void onFailure(Throwable t) {
-			log.info("Failed with " + t);
-		}
-	}
-
-	public final class SayComplete<T> extends OnComplete<T> {
-		@Override
-		public final void onComplete(Throwable t, T result) {
-			log.info("Completed.");
-		}
-	}
-
-	public ActorRef selectNodes(Hashtable<Address, Node> workers) {
-		List<String> routeePaths = new ArrayList<String>();
-		networkInfo = new AppNetInfo();
-
-		this.nParamNode = this.appConf.getNMaster();
-		this.nSlaveNode = this.appConf.getNWorker();
-		this.nProcNodes = this.nParamNode + this.nSlaveNode;
-
-		log.info("select {} nodes for proc", this.nProcNodes);
-		int i = 0;
-		for (Node node : workers.values()) {
-			if (node.isProc() == false) {
-				String addr = node.getActorRef().path().toString();
-				routeePaths.add(addr);
-				node.setProc(true);
-				log.info("set node state by true: {}", node);
-
-				if (i < this.nParamNode) {
-					networkInfo.getParamAddr().add(addr);
-				} else {
-					networkInfo.getSlaveAddr().add(addr);
-				}
-
-				if (routeePaths.size() == this.nProcNodes)
-					break;
-				i++;
-			}
-		}
-		log.info("routeePaths : {}", routeePaths);
-		ActorRef router = getContext().actorOf(new RoundRobinGroup(routeePaths).props(), "router");
-		return router;
-	}
 }

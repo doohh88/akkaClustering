@@ -2,8 +2,8 @@ package com.doohh.akkaClustering.master;
 
 import java.util.Hashtable;
 
-import com.doohh.akkaClustering.util.Command;
-import com.doohh.akkaClustering.util.Node;
+import com.doohh.akkaClustering.dto.Command;
+import com.doohh.akkaClustering.dto.Node;
 import com.doohh.akkaClustering.worker.Worker;
 
 import akka.actor.ActorRef;
@@ -26,14 +26,14 @@ public class Master extends UntypedActor {
 	public static final String REGISTRATION_TO_MASTER = "Master registrate the worker";
 	private Cluster cluster = Cluster.get(getContext().system());
 	private ActorRef launcher;
-	private ActorRef ResourceMngr;
-	
+	private ActorRef resourceMngr;
+
 	// subscribe to cluster changes, MemberUp
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), MemberUp.class, UnreachableMember.class);
-		this.ResourceMngr = context().actorOf(Props.create(ResourceMngr.class), "resourceMngr");
-		this.launcher = context().actorOf(Props.create(Launcher.class), "launcher");		
+		this.resourceMngr = context().actorOf(Props.create(ResourceMngr.class), "resourceMngr");
+		this.launcher = context().actorOf(Props.create(Launcher.class), "launcher");
 	}
 
 	// re-subscribe when restart
@@ -49,7 +49,7 @@ public class Master extends UntypedActor {
 			log.info("received registration msg from the worker");
 			log.info("register the worker at master");
 			Command cmd = new Command("putNode()", new Node(getSender(), false));
-			this.ResourceMngr.tell(cmd, getSelf());
+			this.resourceMngr.tell(cmd, getSelf());
 			log.info("send command to resourceMngr: {}", cmd);
 		} else if (message instanceof MemberUp) {
 			log.info("received MemberUp msg");
@@ -61,7 +61,7 @@ public class Master extends UntypedActor {
 			log.info("remove the worker from master");
 			UnreachableMember mUnreachable = (UnreachableMember) message;
 			Command cmd = new Command("removeNode()", mUnreachable.member().address());
-			this.ResourceMngr.tell(cmd, getSelf());
+			this.resourceMngr.tell(cmd, getSelf());
 			log.info("send command to resourceMngr: {}", cmd);
 		} else if (message instanceof MemberRemoved) {
 			log.info("received MemberRemoved msg");
@@ -72,14 +72,20 @@ public class Master extends UntypedActor {
 
 		// deploy part
 		else if (message instanceof Command) {
-			Command cmd = (Command)message;
+			Command cmd = (Command) message;
 			log.info("received command: {}", cmd);
-			if(cmd.getCommand().equals("submit()")){
+			if (cmd.getCommand().equals("submit()")) {
 				log.info("starting submit()");
 				launcher.tell(cmd, getSelf());
 				log.info("sended appConf to master");
-				getSender().tell("received command and launching applicaiton", getSelf());				
-			}			
+				getSender().tell("received command and launching applicaiton", getSelf());
+			}
+		}
+
+		else if (message.equals("finishApp()")) {
+			this.resourceMngr.tell(new Command().setCommand("setProcFalse()").setData(getSender().path().address()), getSelf());
+			getSender().tell("stopTask()", getSelf());
+			log.info("send msg(stopTask) to the TaskActor");
 		}
 
 		else if (message instanceof String) {

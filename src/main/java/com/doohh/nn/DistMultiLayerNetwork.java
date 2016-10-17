@@ -29,7 +29,7 @@ import org.nd4j.linalg.heartbeat.utils.EnvironmentUtils;
 import org.nd4j.linalg.heartbeat.utils.TaskUtils;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 
-import com.doohh.akkaClustering.util.AppNetInfo;
+import com.doohh.akkaClustering.dto.RouterInfo;
 import com.doohh.akkaClustering.util.PropFactory;
 import com.doohh.akkaClustering.util.Util;
 import com.doohh.akkaClustering.worker.WorkerMain;
@@ -44,7 +44,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private static Properties props;
 	private String role = null;
 	private String roleIdx = null;
-	private AppNetInfo appNetInfo = null;
+	private RouterInfo appNetInfo = null;
 	private ActorSelection worker = null;
 
 	public DistMultiLayerNetwork(MultiLayerConfiguration conf) {
@@ -156,7 +156,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	}
 
 	private void setAppNetInfo() {
-		this.appNetInfo = new AppNetInfo();
+		this.appNetInfo = new RouterInfo();
 		String paramAddrs = props.getProperty("paramNodes");
 		this.appNetInfo.getParamAddr().toArray(new String(paramAddrs).split(","));
 		String slaveAddrs = props.getProperty("slaveNodes");

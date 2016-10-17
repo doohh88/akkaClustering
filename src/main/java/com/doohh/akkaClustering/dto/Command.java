@@ -1,4 +1,4 @@
-package com.doohh.akkaClustering.util;
+package com.doohh.akkaClustering.dto;
 
 import java.io.Serializable;
 
@@ -15,9 +15,17 @@ public class Command<T> implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	private String command;
 	private T data;
-	
 
+	public Command setCommand(String cmd) {
+		this.command = cmd;
+		return this;
+	}
+
+	public Command setData(T data) {
+		this.data = data;
+		return this;
+	}
 }
