@@ -10,3 +10,4 @@ buildNumber.properties
 .mvn/timing.properties
 *.jars
 *.log
+*.classpath
