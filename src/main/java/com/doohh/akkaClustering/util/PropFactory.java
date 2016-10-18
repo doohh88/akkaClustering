@@ -2,6 +2,7 @@ package com.doohh.akkaClustering.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -17,8 +18,9 @@ public class PropFactory {
 	public static String homeDir = null;
 	private String[] seedList;
 	private String seedConf;
-	
-	private PropFactory() {	}
+
+	private PropFactory() {
+	}
 
 	public static PropFactory getInstance(String fileName) {
 		if (instance == null) {
@@ -29,9 +31,11 @@ public class PropFactory {
 			homeDir = Util.getHomeDir();
 			String propFile = homeDir + "/conf/" + fileName;
 			FileInputStream fis = new FileInputStream(propFile);
+			props = new Properties();
 			props.load(new java.io.BufferedInputStream(fis));
+			fis.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			props = null;
 		}
 		return instance;
 	}
@@ -45,7 +49,7 @@ public class PropFactory {
 		if (seedNodes == null) {
 			log.info("if you have seed-nodes, please input seed-nodes IP in $DISTDEEPHOME/conf/config.properties");
 			seedNodes = MasterMain.hostIP;
-		} 		
+		}
 		seedList = new String(seedNodes).split(",");
 	}
 
@@ -64,4 +68,5 @@ public class PropFactory {
 		seedNodes += "]";
 		return seedNodes;
 	}
+
 }

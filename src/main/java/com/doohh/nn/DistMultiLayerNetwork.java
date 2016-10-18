@@ -35,14 +35,12 @@ import com.doohh.akkaClustering.util.PropFactory;
 import com.doohh.akkaClustering.util.Util;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
-import lombok.NoArgsConstructor;
 
 public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 	private Collection<IterationListener> listeners = new ArrayList<>();
-	private static Properties props;
+	private Properties props;
 	private String role = null;
 	private String roleIdx = null;
 	private RouterInfo routerInfo = null;

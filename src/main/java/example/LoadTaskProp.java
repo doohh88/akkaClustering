@@ -1,6 +1,9 @@
 package example;
 
 import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
@@ -19,28 +22,50 @@ public class LoadTaskProp {
 	private ActorSelection task;
 	private RouterInfo routerInfo;
 	private Properties props;
+	private FileLock lock = null;
+	private FileChannel channel = null;
 
 	private void loadTaskProp() {
-		// read confFile
 		String path = Util.getHomeDir() + "/conf";
+
+		// read confFile
+		File confFile = null;
 		File[] fileList = Util.getFileList(path);
 		ArrayList<File> confFiles = new ArrayList<File>();
 		for (File file : fileList) {
 			if (file.getName().contains("task_")) {
-				confFiles.add(file);
+				try {
+					if (checkFile(file)) {
+						confFile = file;
+						break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
-		File confFile = confFiles.get(WorkerMain.n++); // if window
-		String confFileName = confFile.getName();
-		System.out.println(confFile);
-		props = PropFactory.getInstance(confFileName).getProperties();
+		
+		try {
+			Thread.sleep(1000);
+			lock.release();
+			channel.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
 		this.task = WorkerMain.actorSystem.actorSelection("/user/worker/task");
+		System.out.println("role: "+ this.role);
+		System.out.println("roldIdx: " + this.roleIdx);
 		setNetforProc();
 
-		// remove confFile after reading it
-		confFile.delete();
+		// remove confFile after reading it'
+		try {
+			confFile.delete();			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void setNetforProc() {
@@ -52,13 +77,31 @@ public class LoadTaskProp {
 		this.routerInfo.setActorSelection();
 	}
 
+	private boolean checkFile(File file) {
+		try {
+			props = PropFactory.getInstance(file.getName()).getProperties();
+			if (props == null) {
+				return false;
+			} else {
+				this.channel = new RandomAccessFile(file, "rw").getChannel();
+				this.lock = this.channel.lock();
+				return true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+
 	public static void main(String[] args) {
 		LoadTaskProp l = new LoadTaskProp();
 		l.loadTaskProp();
 
-		if (l.role.equals("param")) {
-			l.routerInfo.getSlaveAgents().get(0).tell("hello, i'm parameter server", ActorRef.noSender());
-		}
+		System.out.println("hello world");
+		 if (l.role.equals("param")) {
+		 l.routerInfo.getSlaveAgents().get(0).tell("hello, i'm parameter server", ActorRef.noSender());
+		 }
+
 	}
 
 }

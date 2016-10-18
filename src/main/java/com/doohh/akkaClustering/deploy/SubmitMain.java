@@ -25,7 +25,7 @@ public class SubmitMain {
 	public static String port = "2551";
 	@Option(name = "--jar", usage = "jarPath", aliases = "-j")
 	public static String jarPath = null;
-	@Option(name = "--class", usage = "classPath", aliases = "-c")
+	@Option(name = "--ss", usage = "classPath", aliases = "-c")
 	public static String classPath = null;
 	@Option(name = "--master", usage = "master", aliases = "-m")
 	public static int nMaster = 1;

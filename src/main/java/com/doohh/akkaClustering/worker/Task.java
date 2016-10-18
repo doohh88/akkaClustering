@@ -20,6 +20,7 @@ import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import example.DistLenet;
+import example.LoadTaskProp;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -51,9 +52,9 @@ public class Task extends UntypedActor {
 
 			// *******************
 			// running application
-			//runApp(appConf);
-			//new LoadTaskProp().main(null);
-			new DistLenet().main(null);
+			// runApp(appConf);
+			new LoadTaskProp().main(null);
+			// new DistLenet().main(null);
 			// *******************
 
 			log.info("send msg(complet task) to {}", getSender());
@@ -122,5 +123,7 @@ public class Task extends UntypedActor {
 		}
 		content = content.substring(0, content.length() - 1);
 		Util.write(fileName, content);
+		// int nProcNodes = appConf.getNMaster() + appConf.getNWorker();
+		//Util.write(Util.getHomeDir() + "/conf/lock.properties", "lockIdx=" + 0);
 	}
 }
