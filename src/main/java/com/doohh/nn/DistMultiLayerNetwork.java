@@ -1,9 +1,5 @@
 package com.doohh.nn;
 
-import java.io.File;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,24 +29,27 @@ import org.nd4j.linalg.heartbeat.utils.EnvironmentUtils;
 import org.nd4j.linalg.heartbeat.utils.TaskUtils;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 
+import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.dto.RouterInfo;
-import com.doohh.akkaClustering.util.PropFactory;
-import com.doohh.akkaClustering.util.Util;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+
 
 public class DistMultiLayerNetwork extends MultiLayerNetwork {
-
 	private Collection<IterationListener> listeners = new ArrayList<>();
 	private Properties props;
 	private String role = null;
 	private String roleIdx = null;
 	private RouterInfo routerInfo = null;
-	private ActorSelection task = null;
-	private FileLock lock = null;
-	private FileChannel channel = null;
-
+	private ActorSelection agent = null;
+	private Timeout timeout = new Timeout(scala.concurrent.duration.Duration.create(10, "seconds"));
+	
 	public DistMultiLayerNetwork(MultiLayerConfiguration conf) {
 		super(conf);
 	}
@@ -131,49 +130,19 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 		// init dist configuration
 		// load task.properties & network
-		loadTaskProp();
+		this.props = (new LoadTaskProp()).loadTaskProp();
+		this.role = props.getProperty("role");
+		this.roleIdx = props.getProperty("roleIdx");
+		this.agent = WorkerMain.actorSystem.actorSelection("/user/worker/task");
+		this.agent.tell(new Command().setCommand("DistMultiLayerNetwork()").setData(this), ActorRef.noSender());
+		setNetforProc();
+
+		//test
+		pushGradPullParam();
 	}
 
 	private void initMask() {
 		setMask(Nd4j.ones(1, pack().length()));
-	}
-
-	private void loadTaskProp() {
-		// read confFile
-		File confFile = null;
-		String path = Util.getHomeDir() + "/conf";
-		File[] fileList = Util.getFileList(path);
-		ArrayList<File> confFiles = new ArrayList<File>();
-		for (File file : fileList) {
-			if (file.getName().contains("task_")) {
-				try {
-					if (checkFile(file)) {
-						confFile = file;
-						break;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		try {
-			Thread.sleep(1000);
-			lock.release();
-			channel.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		this.role = props.getProperty("role");
-		this.roleIdx = props.getProperty("roleIdx");
-		this.task = WorkerMain.actorSystem.actorSelection("/user/worker/task");
-		setNetforProc();
-
-		// remove confFile after reading it'
-		try {
-			confFile.delete();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	private void setNetforProc() {
@@ -183,22 +152,6 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		String slaveAddrs = props.getProperty("slaveNodes");
 		this.routerInfo.setSlaveAddr(new ArrayList<String>(Arrays.asList(new String(slaveAddrs).split(","))));
 		this.routerInfo.setActorSelection();
-	}
-
-	private boolean checkFile(File file) {
-		try {
-			props = PropFactory.getInstance(file.getName()).getProperties();
-			if (props == null) {
-				return false;
-			} else {
-				this.channel = new RandomAccessFile(file, "rw").getChannel();
-				this.lock = this.channel.lock();
-				return true;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return true;
 	}
 
 	@Override
@@ -234,11 +187,9 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 			// real training part
 			while (iter.hasNext()) {
-				// communication
 				// pull parameters from master
-				pullParam();
-				
-				
+				pushGradPullParam();
+
 				DataSet next = iter.next();
 				if (next.getFeatureMatrix() == null || next.getLabels() == null)
 					break;
@@ -265,9 +216,6 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 					clearLayerMaskArrays();
 			}
 		}
-
-		// push parameters
-		pushGradient();
 	}
 
 	private void update(Task task) {
@@ -280,12 +228,20 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		}
 	}
 
-	private void pullParam() {
-
+	private void pushGradPullParam() {
+		if(this.role.equals("slave")){
+			for(ActorSelection as : routerInfo.getParamAgents()){
+				try {
+					INDArray grad = Nd4j.create(new float[]{12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, new int[]{1, 12});
+					Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(grad), timeout);
+					//Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(this.flattenedGradients), timeout);
+					INDArray param = (INDArray)Await.result(future, timeout.duration());
+					System.out.println("param: " + param);
+					//setParams(param);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
-
-	private void pushGradient() {
-		
-	}
-
 }

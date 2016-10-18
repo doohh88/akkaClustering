@@ -86,22 +86,22 @@ public class DistLenet {
         model.init();
 
 
-        log.info("Train model....");
-        model.setListeners(new ScoreIterationListener(1));
-        for( int i=0; i<nEpochs; i++ ) {
-            model.fit(mnistTrain);
-            log.info("*** Completed epoch {} ***", i);
-
-            log.info("Evaluate model....");
-            Evaluation eval = new Evaluation(outputNum);
-            while(mnistTest.hasNext()){
-                DataSet ds = mnistTest.next();
-                INDArray output = model.output(ds.getFeatureMatrix(), false);
-                eval.eval(ds.getLabels(), output);
-            }
-            log.info(eval.stats());
-            mnistTest.reset();
-        }
-        log.info("****************Example finished********************");
+//        log.info("Train model....");
+//        model.setListeners(new ScoreIterationListener(1));
+//        for( int i=0; i<nEpochs; i++ ) {
+//            model.fit(mnistTrain);
+//            log.info("*** Completed epoch {} ***", i);
+//
+//            log.info("Evaluate model....");
+//            Evaluation eval = new Evaluation(outputNum);
+//            while(mnistTest.hasNext()){
+//                DataSet ds = mnistTest.next();
+//                INDArray output = model.output(ds.getFeatureMatrix(), false);
+//                eval.eval(ds.getLabels(), output);
+//            }
+//            log.info(eval.stats());
+//            mnistTest.reset();
+//        }
+//        log.info("****************Example finished********************");
     }
 }

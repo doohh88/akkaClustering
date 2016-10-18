@@ -8,7 +8,7 @@ public class Main {
 		int nWorker = 3;
 		MasterMain.main(args);
 		for (int i = 0; i < nWorker; i++) {
-			new WorkerMain().main(args);
+			(new WorkerMain()).main(args);
 			//WorkerMain.main(args);
 		}
 	}

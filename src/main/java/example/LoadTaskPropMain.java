@@ -16,7 +16,7 @@ import com.doohh.akkaClustering.worker.WorkerMain;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 
-public class LoadTaskProp {
+public class LoadTaskPropMain {
 	private String role;
 	private String roleIdx;
 	private ActorSelection task;
@@ -89,7 +89,7 @@ public class LoadTaskProp {
 	}
 
 	public static void main(String[] args) {
-		LoadTaskProp l = new LoadTaskProp();
+		LoadTaskPropMain l = new LoadTaskPropMain();
 		l.loadTaskProp();
 
 		System.out.println("hello world");
