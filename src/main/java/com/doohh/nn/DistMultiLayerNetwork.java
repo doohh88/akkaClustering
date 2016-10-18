@@ -1,6 +1,9 @@
 package com.doohh.nn;
 
 import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +48,8 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private String roleIdx = null;
 	private RouterInfo routerInfo = null;
 	private ActorSelection task = null;
+	private FileLock lock = null;
+	private FileChannel channel = null;
 
 	public DistMultiLayerNetwork(MultiLayerConfiguration conf) {
 		super(conf);
@@ -135,25 +140,40 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 	private void loadTaskProp() {
 		// read confFile
+		File confFile = null;
 		String path = Util.getHomeDir() + "/conf";
 		File[] fileList = Util.getFileList(path);
 		ArrayList<File> confFiles = new ArrayList<File>();
 		for (File file : fileList) {
 			if (file.getName().contains("task_")) {
-				confFiles.add(file);
+				try {
+					if (checkFile(file)) {
+						confFile = file;
+						break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
-		File confFile = confFiles.get(WorkerMain.n++); // if window
-		String confFileName = confFile.getName();
-		System.out.println(confFile);
-		props = PropFactory.getInstance(confFileName).getProperties();
+		try {
+			Thread.sleep(1000);
+			lock.release();
+			channel.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
 		this.task = WorkerMain.actorSystem.actorSelection("/user/worker/task");
 		setNetforProc();
 
-		// remove confFile after reading it
-		confFile.delete();
+		// remove confFile after reading it'
+		try {
+			confFile.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void setNetforProc() {
@@ -163,6 +183,22 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		String slaveAddrs = props.getProperty("slaveNodes");
 		this.routerInfo.setSlaveAddr(new ArrayList<String>(Arrays.asList(new String(slaveAddrs).split(","))));
 		this.routerInfo.setActorSelection();
+	}
+
+	private boolean checkFile(File file) {
+		try {
+			props = PropFactory.getInstance(file.getName()).getProperties();
+			if (props == null) {
+				return false;
+			} else {
+				this.channel = new RandomAccessFile(file, "rw").getChannel();
+				this.lock = this.channel.lock();
+				return true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
 	}
 
 	@Override

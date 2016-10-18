@@ -26,10 +26,9 @@ public class LoadTaskProp {
 	private FileChannel channel = null;
 
 	private void loadTaskProp() {
-		String path = Util.getHomeDir() + "/conf";
-
 		// read confFile
 		File confFile = null;
+		String path = Util.getHomeDir() + "/conf";
 		File[] fileList = Util.getFileList(path);
 		ArrayList<File> confFiles = new ArrayList<File>();
 		for (File file : fileList) {
@@ -44,7 +43,6 @@ public class LoadTaskProp {
 				}
 			}
 		}
-		
 		try {
 			Thread.sleep(1000);
 			lock.release();
@@ -52,17 +50,14 @@ public class LoadTaskProp {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
 		this.task = WorkerMain.actorSystem.actorSelection("/user/worker/task");
-		System.out.println("role: "+ this.role);
-		System.out.println("roldIdx: " + this.roleIdx);
 		setNetforProc();
 
 		// remove confFile after reading it'
 		try {
-			confFile.delete();			
+			confFile.delete();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -98,9 +93,9 @@ public class LoadTaskProp {
 		l.loadTaskProp();
 
 		System.out.println("hello world");
-		 if (l.role.equals("param")) {
-		 l.routerInfo.getSlaveAgents().get(0).tell("hello, i'm parameter server", ActorRef.noSender());
-		 }
+		if (l.role.equals("param")) {
+			l.routerInfo.getSlaveAgents().get(0).tell("hello, i'm parameter server", ActorRef.noSender());
+		}
 
 	}
 
