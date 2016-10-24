@@ -70,7 +70,7 @@ public class Worker extends UntypedActor {
 				task.tell(appConf, getSender());
 			}
 			if (cmd.getCommand().equals("stopTask()")) {
-				System.out.println("stopTask()");
+				log.info("stopTask()");
 				context().stop(task);
 				this.master.tell(new Command().setCommand("returnResource()").setData(null), getSelf());
 				//getSender().tell("stopped Task", getSelf());

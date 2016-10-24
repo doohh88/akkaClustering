@@ -16,7 +16,7 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
-import example.HashTableMain;
+import example.PushGradPullParam;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 
@@ -48,15 +48,16 @@ public class Task extends UntypedActor {
 			// *******************
 			// running application
 			// runApp(appConf);
-			//new LoadTaskPropMain().main(null);
-			//new DistLenet().main(null);
-			new HashTableMain().main(null);
+			// new LoadTaskPropMain().main(null);
+			// new DistLenet().main(null);
+			// new HashTableMain().main(null);
+			new PushGradPullParam().main(null);
 			// *******************
 
 			log.info("send msg(complet task) to {}", getSender());
 			master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());
 		}
-		
+
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
 		} else {

@@ -1,6 +1,7 @@
 package com.doohh.nn;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -14,8 +15,8 @@ public class LoadTaskProp {
 	private Properties props;
 	private FileLock lock = null;
 	private FileChannel channel = null;
-	
-	Properties loadTaskProp() {
+
+	public Properties loadTaskProp() {
 		// read confFile
 		File confFile = null;
 		String path = Util.getHomeDir() + "/conf";
@@ -33,33 +34,40 @@ public class LoadTaskProp {
 				}
 			}
 		}
-		try {
-			Thread.sleep(1000);
-			lock.release();
-			channel.close();
-		} catch (Exception e) {
-			//e.printStackTrace();
-		}
+		unlockFile(confFile);
+		props = PropFactory.getInstance(confFile.getName()).getProperties();
 
 		// remove confFile after reading it'
-		//System.out.println("delete file: " + confFile.getName());
+		// System.out.println("delete file: " + confFile.getName());
 		confFile.delete();
-		
 		return this.props;
-	}	
+	}
 
 	private boolean checkFile(File file) {
 		try {
-			props = PropFactory.getInstance(file.getName()).getProperties();
-			if (props == null) {
+			this.channel = new RandomAccessFile(file, "rw").getChannel();
+			this.lock = this.channel.tryLock();
+			if (lock == null) {
 				return false;
 			} else {
-				this.channel = new RandomAccessFile(file, "rw").getChannel();
-				this.lock = this.channel.lock();
 				return true;
 			}
 		} catch (Exception e) {
 		}
-		return true;
+		return false;
+	}
+
+	public void unlockFile(File file) {
+		try {
+			if (lock != null) {
+				Thread.sleep(1000);
+				lock.release();
+				channel.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

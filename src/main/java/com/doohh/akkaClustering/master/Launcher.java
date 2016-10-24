@@ -17,6 +17,7 @@ import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.routing.Broadcast;
 import akka.util.Timeout;
+import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -120,61 +121,29 @@ public class Launcher extends UntypedActor {
 
 			log.info("send appConf to worker: {}", procNodes);
 			Future<Object> future = Patterns.ask(procNodes, cmd.setData(appConf), timeout);
-			future.onSuccess(new OnSuccess<Object>() {
-				@Override
-				public void onSuccess(Object result) throws Throwable {
-					String ack = (String) result;
-					log.info("get ack: {}", ack);
-				}
-			}, ec);
-			future.onFailure(new OnFailure() {
-				@Override
-				public void onFailure(Throwable t) throws Throwable {
-					log.info("Failed to send with: " + t);
-				}
-			}, ec);
-			future.onComplete(new OnComplete<Object>() {
-				@Override
-				public void onComplete(Throwable t, Object result) throws Throwable {
-					log.info("Completed.");
-				}
-			}, ec);
+			String ack = (String) Await.result(future, timeout.duration());
+			log.info("get ack: {}", ack);
 		}
 	}
 }
 
-// routerTable.put(router, 0);
-// System.out.println(routerTable);
-// Future<Object> futuer = Patterns.ask(router, new Broadcast(new
-// Command().setCommand("stopTask()").setData(null)), timeout);
-// futuer.onSuccess(new OnSuccess<Object>() {
-// @Override
-// public void onSuccess(Object result) throws Throwable {
-// log.info("Succeeded with " + result);
-//
-// System.out.println("hello" + getSender());
-// resourceMngr.tell(new
-// Command().setCommand("setProcFalse()").setData(getSender().path().address()),
-// getSelf());
-// }
-// }, ec);
-// futuer.onFailure(new OnFailure() {
-// @Override
-// public void onFailure(Throwable t) throws Throwable {
-// log.info("Failed to send with: " + t);
-// }
-// }, ec);
-//
-// futuer.onComplete(new OnComplete<Object>() {
-// @Override
-// public void onComplete(Throwable t, Object result) throws Throwable {
-// log.info("Completed.");
-// routerTable.put(router, routerTable.get(router) + 1);
-// System.out.println(routerTable);
-// if (routerTable.get(router) == routerInfo.getNNodes()) {
-// System.out.println("remove router");
-// routerTable.remove(router);
-// context().stop(router);
-// }
-// }
-// }, ec);
+/*Future<Object> future = Patterns.ask(procNodes, cmd.setData(appConf), timeout);
+future.onSuccess(new OnSuccess<Object>() {
+	@Override
+	public void onSuccess(Object result) throws Throwable {
+		String ack = (String) result;
+		log.info("get ack: {}", ack);
+	}
+}, ec);
+future.onFailure(new OnFailure() {
+	@Override
+	public void onFailure(Throwable t) throws Throwable {
+		log.info("Failed to send with: " + t);
+	}
+}, ec);
+future.onComplete(new OnComplete<Object>() {
+	@Override
+	public void onComplete(Throwable t, Object result) throws Throwable {
+		log.info("Completed.");
+	}
+}, ec);*/

@@ -25,7 +25,8 @@ public class Agent extends UntypedActor {
 			
 			if(cmd.equals("pushGradient()")){
 				System.out.println("pushGradient()");
-				System.out.println((INDArray )cmd.getData());
+				System.out.println((INDArray)cmd.getData());
+				getSender().tell("hoho", getSelf());
 				//INDArray params = Nd4j.create(new float[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, new int[]{1, 12});
 				//getSender().tell(cmd.setData(params), getSelf());
 				//getSender().tell(cmd.setData(dmln.params()), getSelf());
