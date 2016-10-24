@@ -6,22 +6,18 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 import com.doohh.akkaClustering.dto.AppConf;
+import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.util.Util;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.dispatch.OnComplete;
-import akka.dispatch.OnFailure;
-import akka.dispatch.OnSuccess;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.pattern.Patterns;
 import akka.util.Timeout;
-import example.DistLenet;
+import example.HashTableMain;
 import scala.concurrent.ExecutionContext;
-import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 public class Task extends UntypedActor {
@@ -53,36 +49,14 @@ public class Task extends UntypedActor {
 			// running application
 			// runApp(appConf);
 			//new LoadTaskPropMain().main(null);
-			new DistLenet().main(null);
-			// new DistLenet().main(null);
+			//new DistLenet().main(null);
+			new HashTableMain().main(null);
 			// *******************
 
 			log.info("send msg(complet task) to {}", getSender());
-			Future<Object> future = Patterns.ask(master, "finishApp()", timeout);
-			future.onSuccess(new OnSuccess<Object>() {
-				@Override
-				public void onSuccess(Object result) throws Throwable {
-					log.info("Succeeded sending with: " + result);
-				}
-			}, ec);
-
-			future.onFailure(new OnFailure() {
-				@Override
-				public void onFailure(Throwable t) throws Throwable {
-					log.info("Failed to send with: " + t);
-				}
-			}, ec);
-
-			future.onComplete(new OnComplete<Object>() {
-				@Override
-				public void onComplete(Throwable t, Object result) throws Throwable {
-					log.info("Completed.");
-					context().stop(getSelf());
-					log.info("stop the task");
-				}
-			}, ec);
+			master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());
 		}
-
+		
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
 		} else {

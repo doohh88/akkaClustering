@@ -38,7 +38,7 @@ public class LoadTaskProp {
 			lock.release();
 			channel.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 
 		// remove confFile after reading it'
@@ -59,7 +59,6 @@ public class LoadTaskProp {
 				return true;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return true;
 	}

@@ -139,6 +139,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 		//test
 		pushGradPullParam();
+		//System.out.println("hello world");
 	}
 
 	private void initMask() {
@@ -230,18 +231,21 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 	private void pushGradPullParam() {
 		if(this.role.equals("slave")){
-			for(ActorSelection as : routerInfo.getParamAgents()){
-				try {
-					INDArray grad = Nd4j.create(new float[]{12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, new int[]{1, 12});
-					Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(grad), timeout);
-					//Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(this.flattenedGradients), timeout);
-					INDArray param = (INDArray)Await.result(future, timeout.duration());
-					System.out.println("param: " + param);
-					//setParams(param);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+			System.out.println("hello i'm slave");
+//			for(ActorSelection as : routerInfo.getParamAgents()){
+//				try {
+//					System.out.println(as);
+//					INDArray grad = Nd4j.create(new float[]{12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, new int[]{1, 12});
+//					//as.tell(new Command().setCommand("pushGradient()").setData(grad), ActorRef.noSender());
+//					Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(grad), timeout);
+//					//Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(this.flattenedGradients), timeout);
+//					INDArray param = (INDArray)Await.result(future, timeout.duration());
+//					System.out.println("param: " + param);
+//					//setParams(param);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
 		}
 	}
 }

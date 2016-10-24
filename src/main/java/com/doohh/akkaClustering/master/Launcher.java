@@ -1,5 +1,7 @@
 package com.doohh.akkaClustering.master;
 
+import java.util.Hashtable;
+
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.dto.RouterInfo;
@@ -13,8 +15,8 @@ import akka.dispatch.OnSuccess;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
+import akka.routing.Broadcast;
 import akka.util.Timeout;
-import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -25,6 +27,7 @@ public class Launcher extends UntypedActor {
 	private Timeout timeout = new Timeout(Duration.create(5, "seconds"));
 	private final ExecutionContext ec;
 	private ActorSelection resourceMngr = null;
+	private Hashtable<ActorRef, Integer> routerTable = null;
 
 	public Launcher() {
 		ec = context().system().dispatcher();
@@ -33,6 +36,7 @@ public class Launcher extends UntypedActor {
 	@Override
 	public void preStart() throws Exception {
 		resourceMngr = getContext().actorSelection("/user/master/resourceMngr");
+		routerTable = new Hashtable<ActorRef, Integer>();
 	}
 
 	@Override
@@ -47,15 +51,14 @@ public class Launcher extends UntypedActor {
 				Future<Object> routerInfo = Patterns.ask(resourceMngr, new Command("getResource()", appConf), timeout);
 				routerInfo.onSuccess(new OnSuccess<Object>() {
 					@Override
-					public void onSuccess(Object routerInfo) throws Throwable {
+					public void onSuccess(Object result) throws Throwable {
 						log.info("Succeeded with " + routerInfo);
+						RouterInfo routerInfo = (RouterInfo) result;
 						try {
-							deployAppConfwithSetting(appConf, (RouterInfo) routerInfo);
+							routerTable.put(routerInfo.getRouter(), 0);
+							deployAppConfwithRole(appConf, routerInfo);
 						} catch (Exception e) {
 							e.printStackTrace();
-						} finally {
-							// remove router
-							context().stop(((RouterInfo) routerInfo).getRouter());
 						}
 					}
 				}, ec);
@@ -68,10 +71,22 @@ public class Launcher extends UntypedActor {
 
 				routerInfo.onComplete(new OnComplete<Object>() {
 					@Override
-					public void onComplete(Throwable t, Object routerInfo) throws Throwable {
+					public void onComplete(Throwable t, Object result) throws Throwable {
 						log.info("Completed.");
 					}
 				}, ec);
+			}
+
+			if (cmd.getCommand().equals("finishApp()")) {
+				log.info("finishApp");
+				RouterInfo routerInfo = (RouterInfo) cmd.getData();
+				ActorRef router = routerInfo.getRouter();
+				routerTable.put(router, routerTable.get(router) + 1);
+				if (routerTable.get(router) == routerInfo.getNNodes()) {
+					// stop all task;
+					router.tell(new Broadcast(new Command().setCommand("stopTask()").setData(null)), getSelf());
+					context().stop(router);
+				}
 			}
 
 		}
@@ -84,7 +99,7 @@ public class Launcher extends UntypedActor {
 		}
 	}
 
-	private void deployAppConfwithSetting(AppConf appConf, RouterInfo routerInfo) throws Throwable {
+	private void deployAppConfwithRole(AppConf appConf, RouterInfo routerInfo) throws Throwable {
 		ActorRef procNodes = routerInfo.getRouter();
 
 		// send appConf to router
@@ -105,9 +120,61 @@ public class Launcher extends UntypedActor {
 
 			log.info("send appConf to worker: {}", procNodes);
 			Future<Object> future = Patterns.ask(procNodes, cmd.setData(appConf), timeout);
-			String ack = (String) Await.result(future, timeout.duration());
-			log.info("get ack: {}", ack);
+			future.onSuccess(new OnSuccess<Object>() {
+				@Override
+				public void onSuccess(Object result) throws Throwable {
+					String ack = (String) result;
+					log.info("get ack: {}", ack);
+				}
+			}, ec);
+			future.onFailure(new OnFailure() {
+				@Override
+				public void onFailure(Throwable t) throws Throwable {
+					log.info("Failed to send with: " + t);
+				}
+			}, ec);
+			future.onComplete(new OnComplete<Object>() {
+				@Override
+				public void onComplete(Throwable t, Object result) throws Throwable {
+					log.info("Completed.");
+				}
+			}, ec);
 		}
 	}
-
 }
+
+// routerTable.put(router, 0);
+// System.out.println(routerTable);
+// Future<Object> futuer = Patterns.ask(router, new Broadcast(new
+// Command().setCommand("stopTask()").setData(null)), timeout);
+// futuer.onSuccess(new OnSuccess<Object>() {
+// @Override
+// public void onSuccess(Object result) throws Throwable {
+// log.info("Succeeded with " + result);
+//
+// System.out.println("hello" + getSender());
+// resourceMngr.tell(new
+// Command().setCommand("setProcFalse()").setData(getSender().path().address()),
+// getSelf());
+// }
+// }, ec);
+// futuer.onFailure(new OnFailure() {
+// @Override
+// public void onFailure(Throwable t) throws Throwable {
+// log.info("Failed to send with: " + t);
+// }
+// }, ec);
+//
+// futuer.onComplete(new OnComplete<Object>() {
+// @Override
+// public void onComplete(Throwable t, Object result) throws Throwable {
+// log.info("Completed.");
+// routerTable.put(router, routerTable.get(router) + 1);
+// System.out.println(routerTable);
+// if (routerTable.get(router) == routerInfo.getNNodes()) {
+// System.out.println("remove router");
+// routerTable.remove(router);
+// context().stop(router);
+// }
+// }
+// }, ec);

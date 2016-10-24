@@ -38,10 +38,10 @@ public class ResourceMngr extends UntypedActor {
 				log.info("current workerTable: {}", workers);
 			}
 			if (cmd.getCommand().equals("setProcFalse()")) {
-				workers.get((Address)cmd.getData()).setProc(false);
+				workers.get((Address) cmd.getData()).setProc(false);
 				log.info("workers : {}", workers);
 			}
-			
+
 			if (cmd.getCommand().equals("getResource()")) {
 				RouterInfo routerInfo = selectNodes((AppConf) cmd.getData());
 				getSender().tell(routerInfo, getSelf());
@@ -56,6 +56,7 @@ public class ResourceMngr extends UntypedActor {
 		int nSlaveNode = appConf.getNWorker();
 		int nProcNodes = nParamNode + nSlaveNode;
 
+		routerInfo.setNNodes(nProcNodes);
 		log.info("select {} nodes for proc");
 		int i = 0;
 		for (Node node : workers.values()) {
@@ -77,7 +78,9 @@ public class ResourceMngr extends UntypedActor {
 			}
 		}
 		log.info("routeePaths : {}", routeePaths);
-		ActorRef router = getContext().actorOf(new RoundRobinGroup(routeePaths).props(), "router");
+		//router's name : router + currentTime
+		ActorRef router = getContext().actorOf(new RoundRobinGroup(routeePaths).props(),
+				"router" + System.currentTimeMillis());
 		routerInfo.setRouter(router);
 		return routerInfo;
 	}

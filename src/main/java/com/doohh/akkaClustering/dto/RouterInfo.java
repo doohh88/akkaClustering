@@ -20,6 +20,7 @@ public class RouterInfo implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private int nNodes;
 	private ActorRef router;
 	private ArrayList<String> paramAddr = null;
 	private ArrayList<String> slaveAddr = null;

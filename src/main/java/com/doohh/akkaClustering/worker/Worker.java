@@ -27,6 +27,8 @@ public class Worker extends UntypedActor {
 	private Cluster cluster = Cluster.get(getContext().system());
 	private Hashtable<Address, Node> masters = new Hashtable<Address, Node>();
 	private AppConf userAppConf;
+	private ActorRef task = null;
+	private ActorSelection master = null;
 
 	// subscribe to cluster changes, MemberUp
 	@Override
@@ -57,15 +59,21 @@ public class Worker extends UntypedActor {
 		}
 
 		else if (message instanceof Command) {
-			Command cmd = (Command)message;
-			if(cmd.getCommand().equals("submit()")){
-				getSender().tell("receive appConf from launcher", getSelf());				
-				AppConf appConf = (AppConf)cmd.getData();
+			Command cmd = (Command) message;
+			if (cmd.getCommand().equals("submit()")) {
+				getSender().tell("receive appConf from launcher", getSelf());
+				AppConf appConf = (AppConf) cmd.getData();
 				log.info("get appConf from master : {}", appConf);
-				ActorRef task = context().actorOf(Props.create(Task.class), "task");
+				task = context().actorOf(Props.create(Task.class), "task");
 				log.info("generate task for proc");
 				log.info("getSender: {}", getSender());
-				task.tell(appConf, getSender());	
+				task.tell(appConf, getSender());
+			}
+			if (cmd.getCommand().equals("stopTask()")) {
+				System.out.println("stopTask()");
+				context().stop(task);
+				this.master.tell(new Command().setCommand("returnResource()").setData(null), getSelf());
+				//getSender().tell("stopped Task", getSelf());
 			}
 		}
 
@@ -80,7 +88,9 @@ public class Worker extends UntypedActor {
 
 	void register(Member member) {
 		if (member.hasRole("master")) {
-			getContext().actorSelection(member.address() + "/user/master").tell(REGISTRATION_TO_WORKER, getSelf());
+			this.master = getContext().actorSelection(member.address() + "/user/master");
+			this.master.tell(REGISTRATION_TO_WORKER, getSelf());			
+			//getContext().actorSelection(member.address() + "/user/master").tell(REGISTRATION_TO_WORKER, getSelf());
 		}
 	}
 }
