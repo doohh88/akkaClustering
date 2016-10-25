@@ -16,7 +16,7 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
-import example.PushGradPullParam;
+import example.DistLenet;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 
@@ -24,7 +24,7 @@ public class Task extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
 	private ActorSelection master = null;
-	private ActorRef agent = null;
+	private ActorRef comm = null;
 	private final ExecutionContext ec;
 	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
 
@@ -33,29 +33,28 @@ public class Task extends UntypedActor {
 	}
 
 	@Override
-	public void preStart() throws Exception {
-		this.agent = context().actorOf(Props.create(Agent.class), "agent");
-	}
-
-	@Override
 	public void onReceive(Object message) throws Throwable {
-		if (message instanceof AppConf) {
-			AppConf appConf = (AppConf) message;
-			log.info("get appConf from worker : {}", appConf);
-			master = getContext().actorSelection(getSender().path().address() + "/user/master");
-			writeTaskProp(appConf);
+		if (message instanceof Command) {
+			Command cmd = (Command) message;
+			if (cmd.getCommand().equals("runApp()")) {
+				AppConf appConf = (AppConf) cmd.getData();
+				log.info("get appConf from worker : {}", appConf);
+				master = getContext().actorSelection(getSender().path().address() + "/user/master");
+				generateComm(appConf);
+				writeTaskProp(appConf);
 
-			// *******************
-			// running application
-			// runApp(appConf);
-			// new LoadTaskPropMain().main(null);
-			// new DistLenet().main(null);
-			// new HashTableMain().main(null);
-			new PushGradPullParam().main(null);
-			// *******************
+				// *******************
+				// running application
+				// runApp(appConf);
+				// new LoadTaskPropMain().main(null);
+				new DistLenet().main(null);
+				// new HashTableMain().main(null);
+				// new PushGradPullParam().main(null);
+				// *******************
 
-			log.info("send msg(complet task) to {}", getSender());
-			master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());
+				log.info("send msg(complet task) to {}", getSender());
+				master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());
+			}
 		}
 
 		else if (message instanceof String) {
@@ -89,14 +88,24 @@ public class Task extends UntypedActor {
 		String content = "role=" + appConf.getRole() + "\nroleIdx=" + appConf.getRoleIdx();
 		content += "\nparamNodes=";
 		for (String addr : appConf.getRouterInfo().getParamAddr()) {
-			content += addr + "/task/agent,";
+			content += addr + "/task/comm,";
 		}
 		content = content.substring(0, content.length() - 1);
 		content += "\nslaveNodes=";
 		for (String addr : appConf.getRouterInfo().getSlaveAddr()) {
-			content += addr + "/task/agent,";
+			content += addr + "/task/comm,";
 		}
 		content = content.substring(0, content.length() - 1);
 		Util.write(fileName, content);
+	}
+
+	void generateComm(AppConf appConf) {
+		String role = appConf.getRole();
+		if (role.equals("param")) {
+			this.comm = context().actorOf(Props.create(PComm.class), "comm");
+
+		} else {
+			this.comm = context().actorOf(Props.create(SComm.class), "comm");
+		}
 	}
 }

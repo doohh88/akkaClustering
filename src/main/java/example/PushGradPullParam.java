@@ -31,12 +31,10 @@ public class PushGradPullParam {
 	private Timeout timeout = new Timeout(scala.concurrent.duration.Duration.create(10, "seconds"));
 
 	private void proc() {
-		//System.out.println("hello i'm application");
 		this.props = (new LoadTaskProp()).loadTaskProp();
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
 		this.agent = WorkerMain.actorSystem.actorSelection("/user/worker/task/agent");
-		//this.agent.tell(new Command().setCommand("DistMultiLayerNetwork()").setData(this), ActorRef.noSender());
 		setNetforProc();
 
 		// test
@@ -53,25 +51,21 @@ public class PushGradPullParam {
 	}
 
 	private void pushGradPullParam() {
-		//System.out.println(this.role);
 		if (this.role.equals("slave")) {
-			//System.out.println("hello i'm slave");
-			/*for (ActorSelection as : routerInfo.getParamAgents()) {
+			System.out.println("hello i'm slave");
+			for (ActorSelection as : routerInfo.getParamAgents()) {
 				try {
-					System.out.println(as);
-					INDArray grad = Nd4j.create(new float[] { 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 },	new int[] { 1, 12 });
-					// as.tell(new Command().setCommand("pushGradient()").setData(grad), ActorRef.noSender());
-					Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(grad), timeout);
-					// Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(this.flattenedGradients), timeout);
-					String param = (String ) Await.result(future, timeout.duration());
-					System.out.println(param);
-					//INDArray param = (INDArray) Await.result(future, timeout.duration());
-					//System.out.println("param: " + param);
-					// setParams(param);
+					INDArray grad = Nd4j.create(new float[] { 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 },
+							new int[] { 1, 12 });
+
+					Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(grad),
+							timeout);
+					INDArray param = (INDArray) Await.result(future, timeout.duration());
+					System.out.println("param: " + param);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}*/
+			}
 		}
 	}
 

@@ -31,6 +31,7 @@ import org.nd4j.linalg.indexing.NDArrayIndex;
 
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.dto.RouterInfo;
+import com.doohh.akkaClustering.util.Util;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
 import akka.actor.ActorRef;
@@ -40,16 +41,15 @@ import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
-
 public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private Collection<IterationListener> listeners = new ArrayList<>();
 	private Properties props;
 	private String role = null;
 	private String roleIdx = null;
 	private RouterInfo routerInfo = null;
-	private ActorSelection agent = null;
+	private ActorSelection comm = null;
 	private Timeout timeout = new Timeout(scala.concurrent.duration.Duration.create(10, "seconds"));
-	
+
 	public DistMultiLayerNetwork(MultiLayerConfiguration conf) {
 		super(conf);
 	}
@@ -133,13 +133,11 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		this.props = (new LoadTaskProp()).loadTaskProp();
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
-		this.agent = WorkerMain.actorSystem.actorSelection("/user/worker/task");
-		this.agent.tell(new Command().setCommand("DistMultiLayerNetwork()").setData(this), ActorRef.noSender());
+		this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/comm");
 		setNetforProc();
+		this.comm.tell(new Command().setCommand("setComm()").setData(this), ActorRef.noSender());
 
-		//test
 		pushGradPullParam();
-		//System.out.println("hello world");
 	}
 
 	private void initMask() {
@@ -230,22 +228,18 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	}
 
 	private void pushGradPullParam() {
-		if(this.role.equals("slave")){
-			System.out.println("hello i'm slave");
-//			for(ActorSelection as : routerInfo.getParamAgents()){
-//				try {
-//					System.out.println(as);
-//					INDArray grad = Nd4j.create(new float[]{12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, new int[]{1, 12});
-//					//as.tell(new Command().setCommand("pushGradient()").setData(grad), ActorRef.noSender());
-//					Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(grad), timeout);
-//					//Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(this.flattenedGradients), timeout);
-//					INDArray param = (INDArray)Await.result(future, timeout.duration());
-//					System.out.println("param: " + param);
-//					//setParams(param);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
+		if (this.role.equals("slave")) {
+			System.out.println("hello i'm slave" + this.roleIdx);
+			for (ActorSelection as : routerInfo.getParamAgents()) {
+				try {
+					Future<Object> future = Patterns.ask(as,
+							new Command().setCommand("pushGradient()").setData(this.gradient()), timeout);
+					INDArray param = (INDArray) Await.result(future, timeout.duration());
+					setParams(param);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }

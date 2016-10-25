@@ -67,7 +67,8 @@ public class Worker extends UntypedActor {
 				task = context().actorOf(Props.create(Task.class), "task");
 				log.info("generate task for proc");
 				log.info("getSender: {}", getSender());
-				task.tell(appConf, getSender());
+				//task.tell(appConf, getSender());
+				task.tell(new Command().setCommand("runApp()").setData(appConf), getSender());
 			}
 			if (cmd.getCommand().equals("stopTask()")) {
 				log.info("stopTask()");
