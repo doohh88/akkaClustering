@@ -88,12 +88,12 @@ public class Task extends UntypedActor {
 		String content = "role=" + appConf.getRole() + "\nroleIdx=" + appConf.getRoleIdx();
 		content += "\nparamNodes=";
 		for (String addr : appConf.getRouterInfo().getParamAddr()) {
-			content += addr + "/task/comm,";
+			content += addr + "/task/pcomm,";
 		}
 		content = content.substring(0, content.length() - 1);
 		content += "\nslaveNodes=";
 		for (String addr : appConf.getRouterInfo().getSlaveAddr()) {
-			content += addr + "/task/comm,";
+			content += addr + "/task/scomm,";
 		}
 		content = content.substring(0, content.length() - 1);
 		Util.write(fileName, content);
@@ -102,10 +102,9 @@ public class Task extends UntypedActor {
 	void generateComm(AppConf appConf) {
 		String role = appConf.getRole();
 		if (role.equals("param")) {
-			this.comm = context().actorOf(Props.create(PComm.class), "comm");
-
+			this.comm = context().actorOf(Props.create(PComm.class), "pcomm");
 		} else {
-			this.comm = context().actorOf(Props.create(SComm.class), "comm");
+			this.comm = context().actorOf(Props.create(SComm.class), "scomm");
 		}
 	}
 }

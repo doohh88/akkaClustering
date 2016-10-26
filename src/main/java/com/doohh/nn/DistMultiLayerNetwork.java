@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.deeplearning4j.datasets.iterator.AsyncDataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
@@ -134,12 +133,39 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		this.props = (new LoadTaskProp()).loadTaskProp();
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
-		this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/comm");
+		if (this.role.equals("param"))
+			this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/pcomm");
+		else
+			this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/scomm");
 		setNetforProc();
-		this.comm.tell(new Command().setCommand("setComm()").setData(this), ActorRef.noSender());
+		if (this.role.equals("param")) {
+			this.comm.tell(new Command().setCommand("setParam()").setData(params()), ActorRef.noSender());
+		}
+		if (this.role.equals("slave")) {
+			/*try {
+				Thread.sleep(1500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+			try {
+				while (true) {
+					Future<Object> future = Patterns.ask(this.comm,
+							new Command().setCommand("checkParamInit()").setData(params()), timeout);
+					String ack = (String) Await.result(future,
+							new Timeout(scala.concurrent.duration.Duration.create(10, "seconds")).duration());
+					if (ack.equals("true")){
+						System.out.println("true");
+						break;						
+					}
+					
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 
-		// pushGradPullParam();
-		if(this.role.equals("slave"))
+		if (this.role.equals("slave"))
 			System.out.println("hello i'm slave" + this.roleIdx);
 	}
 
@@ -242,6 +268,10 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 							new Command().setCommand("pushGradient()").setData(this.gradient()), timeout);
 					INDArray param = (INDArray) Await.result(future,
 							new Timeout(scala.concurrent.duration.Duration.create(10, "seconds")).duration());
+					// String param = (String) Await.result(future,
+					// new Timeout(scala.concurrent.duration.Duration.create(10,
+					// "seconds")).duration());
+					// System.out.println(param);
 					setParams(param);
 				} catch (Exception e) {
 					e.printStackTrace();

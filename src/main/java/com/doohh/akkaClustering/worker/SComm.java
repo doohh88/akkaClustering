@@ -13,7 +13,8 @@ import akka.event.LoggingAdapter;
 public class SComm extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	private DistMultiLayerNetwork dmln = null;
-
+	private INDArray param = null;
+	
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof Command) {
@@ -22,7 +23,14 @@ public class SComm extends UntypedActor {
 				log.info("set Comm with DistMultiLayerNetwork");
 				dmln = (DistMultiLayerNetwork)cmd.getData();				 
 			}
+			
+			if (cmd.getCommand().equals("setParam()")) {
+				log.info("set PComm with parameters");
+				param = (INDArray) cmd.getData();
+				//getSender().tell("ack", getSelf());
+			}
 		}
+		
 		
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
