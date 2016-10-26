@@ -10,9 +10,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.serialization.Serialization;
+import akka.serialization.SerializationExtension;
 
 public class MasterMain {
 	private static final Logger log = LoggerFactory.getLogger(MasterMain.class);
