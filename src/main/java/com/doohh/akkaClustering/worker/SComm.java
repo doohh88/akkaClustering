@@ -27,7 +27,6 @@ public class SComm extends UntypedActor {
 			if (cmd.getCommand().equals("setParam()")) {
 				log.info("set PComm with parameters");
 				param = (INDArray) cmd.getData();
-				//getSender().tell("ack", getSelf());
 			}
 		}
 		

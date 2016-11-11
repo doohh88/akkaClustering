@@ -28,12 +28,16 @@ import org.nd4j.linalg.heartbeat.utils.EnvironmentUtils;
 import org.nd4j.linalg.heartbeat.utils.TaskUtils;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 
+import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.dto.RouterInfo;
+import com.doohh.akkaClustering.worker.PComm;
+import com.doohh.akkaClustering.worker.SComm;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
+import akka.actor.Props;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import lombok.Data;
@@ -133,6 +137,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		this.props = (new LoadTaskProp()).loadTaskProp();
 		this.role = props.getProperty("role");
 		this.roleIdx = props.getProperty("roleIdx");
+		
 		if (this.role.equals("param"))
 			this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/pcomm");
 		else
@@ -142,23 +147,17 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			this.comm.tell(new Command().setCommand("setParam()").setData(params()), ActorRef.noSender());
 		}
 		if (this.role.equals("slave")) {
-			/*try {
-				Thread.sleep(1500);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
 			try {
 				while (true) {
 					Future<Object> future = Patterns.ask(this.comm,
 							new Command().setCommand("checkParamInit()").setData(params()), timeout);
 					String ack = (String) Await.result(future,
 							new Timeout(scala.concurrent.duration.Duration.create(10, "seconds")).duration());
-					if (ack.equals("true")){
+					if (ack.equals("true")) {
 						System.out.println("true");
-						break;						
+						break;
 					}
-					
+
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -268,10 +267,6 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 							new Command().setCommand("pushGradient()").setData(this.gradient()), timeout);
 					INDArray param = (INDArray) Await.result(future,
 							new Timeout(scala.concurrent.duration.Duration.create(10, "seconds")).duration());
-					// String param = (String) Await.result(future,
-					// new Timeout(scala.concurrent.duration.Duration.create(10,
-					// "seconds")).duration());
-					// System.out.println(param);
 					setParams(param);
 				} catch (Exception e) {
 					e.printStackTrace();

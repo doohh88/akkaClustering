@@ -91,6 +91,11 @@ public class Master extends UntypedActor {
 			}
 			
 		}
+		
+		else if (message instanceof Sample){
+			System.out.println("Hello world");
+			System.out.println((Sample)message);
+		}
 
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
