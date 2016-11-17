@@ -1,19 +1,29 @@
 package com.doohh.example;
 
+import java.util.concurrent.TimeUnit;
+
 import org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator;
+import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
+import org.deeplearning4j.earlystopping.EarlyStoppingResult;
+import org.deeplearning4j.earlystopping.saver.LocalFileModelSaver;
+import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator;
+import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
+import org.deeplearning4j.earlystopping.termination.MaxScoreIterationTerminationCondition;
+import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition;
+import org.deeplearning4j.earlystopping.termination.ScoreImprovementEpochTerminationCondition;
+import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
+import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
-import org.deeplearning4j.nn.conf.layers.setup.ConvolutionLayerSetup;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
@@ -24,19 +34,19 @@ import org.slf4j.LoggerFactory;
 public class LenetMnistEarlyStoppingEx {
 	private static final Logger log = LoggerFactory.getLogger(LenetMnistEarlyStoppingEx.class);
 
-    public static void main(String[] args) throws Exception {
-        int nChannels = 1;
-        int outputNum = 10;
-        int batchSize = 64;
-        int nEpochs = 1;
-        int iterations = 1;
-        int seed = 123;
+	public static void main(String[] args) throws Exception {
+		int nChannels = 1;
+		int outputNum = 10;
+		int batchSize = 64;
+		int nEpochs = 1;
+		int iterations = 1;
+		int seed = 123;
 
-        log.info("Load data....");
-        DataSetIterator mnistTrain = new MnistDataSetIterator(batchSize,true,12345);
-        DataSetIterator mnistTest = new MnistDataSetIterator(batchSize,false,12345);
+		log.info("Load data....");
+		DataSetIterator mnistTrain = new MnistDataSetIterator(batchSize, true, 12345);
+		DataSetIterator mnistTest = new MnistDataSetIterator(batchSize, false, 12345);
 
-        log.info("Build model....");
+		log.info("Build model....");
         MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
                 .seed(seed)
                 .iterations(iterations)
@@ -74,31 +84,43 @@ public class LenetMnistEarlyStoppingEx {
                         .nOut(outputNum)
                         .activation("softmax")
                         .build())
+                .setInputType(InputType.convolutionalFlat(28,28,1)) //See note below
                 .backprop(true).pretrain(false);
         // The builder needs the dimensions of the image along with the number of channels. these are 28x28 images in one channel
-        new ConvolutionLayerSetup(builder,28,28,1);
+        //new ConvolutionLayerSetup(builder,28,28,1);
 
-        MultiLayerConfiguration conf = builder.build();
-        MultiLayerNetwork model = new MultiLayerNetwork(conf);
-        model.init();
+		MultiLayerConfiguration conf = builder.build();
+		EarlyStoppingConfiguration esConf = new EarlyStoppingConfiguration.Builder()
+				.epochTerminationConditions(new MaxEpochsTerminationCondition(100), new ScoreImprovementEpochTerminationCondition(5))
+				//.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(3, TimeUnit.SECONDS), new MaxScoreIterationTerminationCondition(2.5))
+				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(3, TimeUnit.SECONDS))
+				.scoreCalculator(new DataSetLossCalculator(mnistTest, true)).evaluateEveryNEpochs(1)
+				.modelSaver(new LocalFileModelSaver("C:/early")).build();
 
+		EarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConf, conf, mnistTrain);
+		EarlyStoppingResult result = trainer.fit();
 
-        log.info("Train model....");
-        model.setListeners(new ScoreIterationListener(1));
-        for( int i=0; i<nEpochs; i++ ) {
-            model.fit(mnistTrain);
-            log.info("*** Completed epoch {} ***", i);
+		// Print out the results:
+		System.out.println("Termination reason: " + result.getTerminationReason());
+		System.out.println("Termination details: " + result.getTerminationDetails());
+		System.out.println("Total epochs: " + result.getTotalEpochs());
+		System.out.println("Best epoch number: " + result.getBestModelEpoch());
+		System.out.println("Score at best epoch: " + result.getBestModelScore());
 
-            log.info("Evaluate model....");
-            Evaluation eval = new Evaluation(outputNum);
-            while(mnistTest.hasNext()){
-                DataSet ds = mnistTest.next();
-                INDArray output = model.output(ds.getFeatureMatrix(), false);
-                eval.eval(ds.getLabels(), output);
-            }
-            log.info(eval.stats());
-            mnistTest.reset();
+		// Get the best model:
+		MultiLayerNetwork bestModel = (MultiLayerNetwork) result.getBestModel();
+		
+		// evaluate the best model:
+		log.info("Evaluate model....");
+        Evaluation eval = new Evaluation(outputNum);
+        while(mnistTest.hasNext()){
+            DataSet ds = mnistTest.next();
+            INDArray output = bestModel.output(ds.getFeatureMatrix(), false);
+            eval.eval(ds.getLabels(), output);
         }
+        System.out.println(eval.stats());
+        //log.info(eval.stats());
         log.info("****************Example finished********************");
-    }
+
+	}
 }

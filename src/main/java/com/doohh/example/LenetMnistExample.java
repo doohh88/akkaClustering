@@ -1,21 +1,22 @@
 package com.doohh.example;
 
+
 import org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
+import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
-import org.deeplearning4j.nn.conf.layers.setup.ConvolutionLayerSetup;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -77,14 +78,14 @@ public class LenetMnistExample {
                         .nOut(outputNum)
                         .activation("softmax")
                         .build())
+                .setInputType(InputType.convolutionalFlat(28,28,1)) //See note below
                 .backprop(true).pretrain(false);
         // The builder needs the dimensions of the image along with the number of channels. these are 28x28 images in one channel
-        new ConvolutionLayerSetup(builder,28,28,1);
+        //new ConvolutionLayerSetup(builder,28,28,1);
 
         MultiLayerConfiguration conf = builder.build();
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
         model.init();
-
 
         log.info("Train model....");
         model.setListeners(new ScoreIterationListener(1));
@@ -99,9 +100,51 @@ public class LenetMnistExample {
                 INDArray output = model.output(ds.getFeatureMatrix(), false);
                 eval.eval(ds.getLabels(), output);
             }
-            log.info(eval.stats());
+            //log.info(eval.stats());
+            System.out.println(eval.stats());
             mnistTest.reset();
         }
         log.info("****************Example finished********************");
     }
 }
+
+
+
+//log.info("Train model....");
+//model.setListeners(new ScoreIterationListener(1));
+//for( int i=0; i<nEpochs; i++ ) {
+//  model.fit(mnistTrain);
+//  log.info("*** Completed epoch {} ***", i);
+//
+//  log.info("Evaluate model....");
+//  Evaluation eval = new Evaluation(outputNum);
+//  while(mnistTest.hasNext()){
+//      DataSet ds = mnistTest.next();
+//      INDArray output = model.output(ds.getFeatureMatrix(), false);
+//      eval.eval(ds.getLabels(), output);
+//  }
+//  log.info(eval.stats());
+//  mnistTest.reset();
+//}
+//log.info("****************Example finished********************");
+
+//log.info("Train model....");
+//model.setListeners(new ScoreIterationListener(1));
+//for( int i=0; i<nEpochs; i++ ) {
+//  model.fit(mnistTrain);
+//  log.info("*** Completed epoch {} ***", i);
+//}
+//
+//log.info("Evaluate model....");
+//Evaluation eval = new Evaluation(outputNum);
+//int cnt = 0;
+//while(mnistTest.hasNext()){
+//  log.info("cnt: {}", cnt++);
+//  DataSet next = mnistTest.next();
+//  INDArray predicted = model.output(next.getFeatureMatrix());
+//  INDArray actual = next.getLabels();
+//  eval.eval(actual, predicted);
+//}
+//log.info(eval.stats());
+//log.info("****************Example finished********************");
+//

@@ -14,7 +14,7 @@ public class SComm extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	private DistMultiLayerNetwork dmln = null;
 	private INDArray param = null;
-	
+
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof Command) {
@@ -27,6 +27,18 @@ public class SComm extends UntypedActor {
 			if (cmd.getCommand().equals("setParam()")) {
 				log.info("set PComm with parameters");
 				param = (INDArray) cmd.getData();
+			}
+			
+			
+			if (cmd.getCommand().equals("waitSlave()")) {
+				log.info("wait slave");
+				dmln = (DistMultiLayerNetwork)cmd.getData();
+				synchronized(dmln){
+					while(canStart == true){
+						dmln.wait();						
+					}
+				}
+				
 			}
 		}
 		

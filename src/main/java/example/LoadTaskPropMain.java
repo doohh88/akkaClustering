@@ -94,7 +94,7 @@ public class LoadTaskPropMain {
 
 		System.out.println("hello world");
 		if (l.role.equals("param")) {
-			l.routerInfo.getSlaveAgents().get(0).tell("hello, i'm parameter server", ActorRef.noSender());
+			l.routerInfo.getSlaveComms().get(0).tell("hello, i'm parameter server", ActorRef.noSender());
 		}
 
 	}

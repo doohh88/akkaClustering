@@ -36,7 +36,7 @@ public class SubmitMain {
 		// ****************************************************************************
 		args = new String[11];
 		args[0] = "-m";
-		args[1] = "1";
+		args[1] = "2";
 		args[2] = "-w";
 		args[3] = "2";
 		args[4] = "-j";
@@ -58,7 +58,7 @@ public class SubmitMain {
 			log.error("please input --jar & --class option");
 			return;
 		}		
-
+ 
 		Config conf = ConfigFactory.load("deploy");
 		final ActorSystem system = ActorSystem.create("deploy", conf);
 		final ActorRef submit = system.actorOf(Props.create(Submit.class), "submit");

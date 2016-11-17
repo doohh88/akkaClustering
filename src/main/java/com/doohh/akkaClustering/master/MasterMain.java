@@ -38,12 +38,12 @@ public class MasterMain {
 
 		ActorSystem actorSystem = ActorSystem.create(systemName, conf);
 		ActorRef master = actorSystem.actorOf(Props.create(Master.class), "master");
-		Sample sample = new Sample();
-		master.tell(sample, ActorRef.noSender());
-		System.out.println(sample);
-		Integer a = new Integer(1);
-		Integer b = new Integer(2);		
-		System.out.println(a);
-		System.out.println(b);
+//		Sample sample = new Sample();
+//		master.tell(sample, ActorRef.noSender());
+//		System.out.println(sample);
+//		Integer a = new Integer(1);
+//		Integer b = new Integer(2);		
+//		System.out.println(a);
+//		System.out.println(b);
 	}
 }

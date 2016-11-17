@@ -16,6 +16,26 @@ public class LoadTaskProp {
 	private FileLock lock = null;
 	private FileChannel channel = null;
 
+	public Properties loadTaskProp(int idx) {
+		// read confFile
+		File confFile = null;
+		String path = Util.getHomeDir() + "/conf";
+		File[] fileList = Util.getFileList(path);
+		ArrayList<File> confFiles = new ArrayList<File>();
+		for (File file : fileList) {
+			if (file.getName().contains("task_"))
+				confFiles.add(file);
+		}
+		confFile = confFiles.get(idx);
+		// unlockFile(confFile);
+		props = PropFactory.getInstance(confFile.getName()).getProperties();
+
+		// remove confFile after reading it'
+		// System.out.println("delete file: " + confFile.getName());
+		// confFile.delete();
+		return this.props;
+	}
+
 	public Properties loadTaskProp() {
 		// read confFile
 		File confFile = null;
@@ -39,7 +59,7 @@ public class LoadTaskProp {
 
 		// remove confFile after reading it'
 		// System.out.println("delete file: " + confFile.getName());
-		confFile.delete();
+		// confFile.delete();
 		return this.props;
 	}
 

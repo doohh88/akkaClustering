@@ -53,7 +53,7 @@ public class PushGradPullParam {
 	private void pushGradPullParam() {
 		if (this.role.equals("slave")) {
 			System.out.println("hello i'm slave");
-			for (ActorSelection as : routerInfo.getParamAgents()) {
+			for (ActorSelection as : routerInfo.getParamComms()) {
 				try {
 					INDArray grad = Nd4j.create(new float[] { 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 },
 							new int[] { 1, 12 });

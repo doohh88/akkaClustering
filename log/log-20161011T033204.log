@@ -1,2 +1,0 @@
-1016 [main] INFO  c.d.akkaClustering.util.PropFactory - if you have seed-nodes, please input seed-nodes IP in $DISTDEEPHOME/conf/config.properties
-1094 [main] INFO  c.d.a.master.MasterMain - Starting distDepp Master

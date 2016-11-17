@@ -21,11 +21,13 @@ public class RouterInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private int nNodes;
+	private int nParamServer;
 	private ActorRef router;
+	private ArrayList<Range> paramRange = null;
 	private ArrayList<String> paramAddr = null;
 	private ArrayList<String> slaveAddr = null;
-	private ArrayList<ActorSelection> paramAgents = null;
-	private ArrayList<ActorSelection> slaveAgents = null;
+	private ArrayList<ActorSelection> paramComms = null;
+	private ArrayList<ActorSelection> slaveComms = null;
 
 	public RouterInfo() {
 		paramAddr = new ArrayList<String>();
@@ -33,13 +35,44 @@ public class RouterInfo implements Serializable {
 	}
 
 	public void setActorSelection() {
-		paramAgents = new ArrayList<ActorSelection>();
-		slaveAgents = new ArrayList<ActorSelection>();
+		paramComms = new ArrayList<ActorSelection>();
+		slaveComms = new ArrayList<ActorSelection>();
 		for (String addr : paramAddr) {
-			paramAgents.add(WorkerMain.actorSystem.actorSelection(addr));
+			paramComms.add(WorkerMain.actorSystem.actorSelection(addr));
 		}
 		for (String addr : slaveAddr) {
-			slaveAgents.add(WorkerMain.actorSystem.actorSelection(addr));
+			slaveComms.add(WorkerMain.actorSystem.actorSelection(addr));
+		}
+	}
+
+	public void setRange(int paramSize) {
+		this.nNodes = paramAddr.size() + slaveAddr.size();
+		this.nParamServer = paramAddr.size();
+		paramRange = new ArrayList<Range>();
+		int q = paramSize / nParamServer;
+		int r = paramSize % nParamServer;
+		int start, end;
+		for (int i = 0; i < paramAddr.size(); i++) {
+			start = q * i;
+			if (i == nParamServer - 1)
+				end = paramSize;
+			else
+				end = start + q;
+			paramRange.add(new Range(start, end));
+		}
+		// System.out.println("paramSize: " + paramSize);
+		// System.out.println("range: " + paramRange);
+	}
+
+	@Data
+	@ToString
+	public class Range {
+		int start;
+		int end;
+
+		public Range(int start, int end) {
+			this.start = start;
+			this.end = end;
 		}
 	}
 }
