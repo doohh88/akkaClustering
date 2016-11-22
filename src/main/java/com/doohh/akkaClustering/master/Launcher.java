@@ -127,23 +127,18 @@ public class Launcher extends UntypedActor {
 	}
 }
 
-/*Future<Object> future = Patterns.ask(procNodes, cmd.setData(appConf), timeout);
-future.onSuccess(new OnSuccess<Object>() {
-	@Override
-	public void onSuccess(Object result) throws Throwable {
-		String ack = (String) result;
-		log.info("get ack: {}", ack);
-	}
-}, ec);
-future.onFailure(new OnFailure() {
-	@Override
-	public void onFailure(Throwable t) throws Throwable {
-		log.info("Failed to send with: " + t);
-	}
-}, ec);
-future.onComplete(new OnComplete<Object>() {
-	@Override
-	public void onComplete(Throwable t, Object result) throws Throwable {
-		log.info("Completed.");
-	}
-}, ec);*/
+/*
+ * Future<Object> future = Patterns.ask(procNodes, cmd.setData(appConf),
+ * timeout); future.onSuccess(new OnSuccess<Object>() {
+ * 
+ * @Override public void onSuccess(Object result) throws Throwable { String ack
+ * = (String) result; log.info("get ack: {}", ack); } }, ec);
+ * future.onFailure(new OnFailure() {
+ * 
+ * @Override public void onFailure(Throwable t) throws Throwable { log.info(
+ * "Failed to send with: " + t); } }, ec); future.onComplete(new
+ * OnComplete<Object>() {
+ * 
+ * @Override public void onComplete(Throwable t, Object result) throws Throwable
+ * { log.info("Completed."); } }, ec);
+ */

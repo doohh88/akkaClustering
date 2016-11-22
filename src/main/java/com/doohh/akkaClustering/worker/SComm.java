@@ -19,30 +19,28 @@ public class SComm extends UntypedActor {
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof Command) {
 			Command cmd = (Command) message;
-			if(cmd.getCommand().equals("setComm()")){
+			if (cmd.getCommand().equals("setComm()")) {
 				log.info("set Comm with DistMultiLayerNetwork");
-				dmln = (DistMultiLayerNetwork)cmd.getData();				 
+				dmln = (DistMultiLayerNetwork) cmd.getData();
 			}
-			
+
 			if (cmd.getCommand().equals("setParam()")) {
 				log.info("set PComm with parameters");
 				param = (INDArray) cmd.getData();
 			}
-			
-			
+
 			if (cmd.getCommand().equals("waitSlave()")) {
 				log.info("wait slave");
-				dmln = (DistMultiLayerNetwork)cmd.getData();
-				synchronized(dmln){
-					while(canStart == true){
-						dmln.wait();						
+				dmln = (DistMultiLayerNetwork) cmd.getData();
+				synchronized (dmln) {
+					while (canStart == true) {
+						dmln.wait();
 					}
 				}
-				
+
 			}
 		}
-		
-		
+
 		else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
 			System.out.println(message);

@@ -78,7 +78,7 @@ public class ResourceMngr extends UntypedActor {
 			}
 		}
 		log.info("routeePaths : {}", routeePaths);
-		//router's name : router + currentTime
+		// router's name : router + currentTime
 		ActorRef router = getContext().actorOf(new RoundRobinGroup(routeePaths).props(),
 				"router" + System.currentTimeMillis());
 		routerInfo.setRouter(router);

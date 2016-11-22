@@ -67,14 +67,14 @@ public class Worker extends UntypedActor {
 				task = context().actorOf(Props.create(Task.class), "task");
 				log.info("generate task for proc");
 				log.info("getSender: {}", getSender());
-				//task.tell(appConf, getSender());
+				// task.tell(appConf, getSender());
 				task.tell(new Command().setCommand("runApp()").setData(appConf), getSender());
 			}
 			if (cmd.getCommand().equals("stopTask()")) {
 				log.info("stopTask()");
 				context().stop(task);
 				this.master.tell(new Command().setCommand("returnResource()").setData(null), getSelf());
-				//getSender().tell("stopped Task", getSelf());
+				// getSender().tell("stopped Task", getSelf());
 			}
 		}
 
@@ -90,8 +90,9 @@ public class Worker extends UntypedActor {
 	void register(Member member) {
 		if (member.hasRole("master")) {
 			this.master = getContext().actorSelection(member.address() + "/user/master");
-			this.master.tell(REGISTRATION_TO_WORKER, getSelf());			
-			//getContext().actorSelection(member.address() + "/user/master").tell(REGISTRATION_TO_WORKER, getSelf());
+			this.master.tell(REGISTRATION_TO_WORKER, getSelf());
+			// getContext().actorSelection(member.address() +
+			// "/user/master").tell(REGISTRATION_TO_WORKER, getSelf());
 		}
 	}
 }

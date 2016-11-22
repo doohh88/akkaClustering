@@ -57,8 +57,8 @@ public class SubmitMain {
 		if (jarPath == null || classPath == null) {
 			log.error("please input --jar & --class option");
 			return;
-		}		
- 
+		}
+
 		Config conf = ConfigFactory.load("deploy");
 		final ActorSystem system = ActorSystem.create("deploy", conf);
 		final ActorRef submit = system.actorOf(Props.create(Submit.class), "submit");

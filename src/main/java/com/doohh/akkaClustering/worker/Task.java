@@ -27,15 +27,15 @@ public class Task extends UntypedActor {
 	private ActorRef comm = null;
 	private final ExecutionContext ec;
 	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
-	private int nTotalApp = 0;
-	private int nFinishedApp = 0;
-	private AppConf appConf = null;
+private int nTotalApp = 0;
+private int nFinishedApp = 0;
+private AppConf appConf = null;
 
-	public Task() {
-		ec = context().system().dispatcher();
-	}
+public Task() {
+	ec = context().system().dispatcher();
+}
 
-	@Override
+@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof Command) {
 			Command cmd = (Command) message;
@@ -109,13 +109,13 @@ public class Task extends UntypedActor {
 		String content = "role=" + appConf.getRole() + "\nroleIdx=" + appConf.getRoleIdx();
 		content += "\nparamNodes=";
 		for (String addr : appConf.getRouterInfo().getParamAddr()) {
-			content += addr + "/task/pcomm"+ appConf.getRoleIdx() + ",";
+			content += addr + "/task/pcomm" + appConf.getRoleIdx() + ",";
 		}
 		content = content.substring(0, content.length() - 1);
-				
+
 		content += "\nslaveNodes=";
 		for (String addr : appConf.getRouterInfo().getSlaveAddr()) {
-			content += addr + "/task/scomm"+ appConf.getRoleIdx() + ",";
+			content += addr + "/task/scomm" + appConf.getRoleIdx() + ",";
 		}
 		content = content.substring(0, content.length() - 1);
 		Util.write(fileName, content);

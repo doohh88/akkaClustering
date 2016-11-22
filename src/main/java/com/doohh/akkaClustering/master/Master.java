@@ -70,7 +70,6 @@ public class Master extends UntypedActor {
 		} else if (message instanceof MemberEvent) {
 		}
 
-
 		else if (message instanceof Command) {
 			Command cmd = (Command) message;
 			log.info("received command: {}", cmd);
@@ -81,20 +80,21 @@ public class Master extends UntypedActor {
 				log.info("sended appConf to master");
 				getSender().tell("received command and launching applicaiton", getSelf());
 			}
-			if(cmd.getCommand().equals("finishApp()")){
+			if (cmd.getCommand().equals("finishApp()")) {
 				log.info("finishApp()");
 				launcher.tell(cmd, getSender());
 			}
-			if(cmd.getCommand().equals("returnResource()")){
+			if (cmd.getCommand().equals("returnResource()")) {
 				log.info("returnResource()");
-				this.resourceMngr.tell(new Command().setCommand("setProcFalse()").setData(getSender().path().address()), getSelf());
+				this.resourceMngr.tell(new Command().setCommand("setProcFalse()").setData(getSender().path().address()),
+						getSelf());
 			}
-			
+
 		}
-		
-		else if (message instanceof Sample){
+
+		else if (message instanceof Sample) {
 			System.out.println("Hello world");
-			System.out.println((Sample)message);
+			System.out.println((Sample) message);
 		}
 
 		else if (message instanceof String) {
@@ -112,5 +112,6 @@ public class Master extends UntypedActor {
 	}
 }
 
-
-//this.resourceMngr.tell(new Command().setCommand("setProcFalse()").setData(getSender().path().address()), getSelf());
+// this.resourceMngr.tell(new
+// Command().setCommand("setProcFalse()").setData(getSender().path().address()),
+// getSelf());
