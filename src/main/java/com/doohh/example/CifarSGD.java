@@ -1,5 +1,8 @@
 package com.doohh.example;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.datavec.image.loader.CifarLoader;
 import org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
@@ -10,7 +13,6 @@ import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
-import org.deeplearning4j.nn.conf.layers.setup.ConvolutionLayerSetup;
 import org.deeplearning4j.nn.conf.preprocessor.CnnToFeedForwardPreProcessor;
 import org.deeplearning4j.nn.conf.preprocessor.FeedForwardToCnnPreProcessor;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -26,13 +28,13 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CifarWithSGD {
-private static final Logger log = LoggerFactory.getLogger(CifarCompleteEx.class);
+public class CifarSGD {
+private static final Logger log = LoggerFactory.getLogger(CifarSGD.class);
 	
 	@Option(name="--batchSize",usage="batchSize",aliases = "-b")
     int batchSize = 128;
     @Option(name="--nEpochs",usage="nEpochs",aliases = "-e")
-    int nEpochs = 1;
+    int nEpochs = 100;
     @Option(name="--numTrain",usage="numTrain",aliases = "-tr")
     int numTrain = CifarLoader.NUM_TRAIN_IMAGES;
     @Option(name="--numTest",usage="numTest",aliases = "-te")
@@ -57,29 +59,24 @@ private static final Logger log = LoggerFactory.getLogger(CifarCompleteEx.class)
 		// TODO Auto-generated method stub
 		this.parseArgs(args);
 		
-		int width = 32;
-		int height = 32;
 		int nChannels = 3;
 	    int outputNum = 10;
 	    int iterations = 10;
-	    //int splitTrainNum = (int) (batchSize*.8);
+	    int splitTrainNum = (int) (batchSize*.8);
 	    int seed = 123;
 	    int listenerFreq = iterations/5;
-			    
+	    List<String> LABELS = Arrays.asList("airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck");
 	    
         DataSetIterator train = new CifarDataSetIterator(batchSize, numTrain, true);
         DataSetIterator test = new CifarDataSetIterator(batchSize, numTest, false);
                
         //setup the network
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .seed(seed)
-                //.batchSize(batchSize)
-                .iterations(iterations)
+        MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
+        		.seed(seed)
+                .iterations(10)
                 .momentum(0.9)
                 .regularization(true)
-                //.constrainGradientToUnitNorm(true)
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                //.list(6)
                 .list()
                 .layer(0, new ConvolutionLayer.Builder(new int[]{5, 5})
                         .nIn(1)
@@ -108,21 +105,19 @@ private static final Logger log = LoggerFactory.getLogger(CifarCompleteEx.class)
                         .build())
                 .layer(5, new OutputLayer.Builder(LossFunctions.LossFunction.MSE)
                         .nIn(1000)
-                        .nOut(outputNum)
+                        .nOut(LABELS.size())
                         .dropOut(0.5)
                         .weightInit(WeightInit.XAVIER)
                         .build())
-                .inputPreProcessor(0, new FeedForwardToCnnPreProcessor(width, height, 1))
+                .inputPreProcessor(0, new FeedForwardToCnnPreProcessor(32, 32, 1))
                 .inputPreProcessor(4, new CnnToFeedForwardPreProcessor())
-                .backprop(true).pretrain(false)
-                .build(); 
-        
+                .backprop(true).pretrain(false);
 
-        /*new ConvolutionLayerSetup(builder,32,32,nChannels);
-        MultiLayerConfiguration conf = builder.build();*/
+        MultiLayerConfiguration conf = builder.build();
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();
         network.setListeners(new ScoreIterationListener(listenerFreq));
+        log.error("hello");
 		for (int i = 0; i < nEpochs; i++) {
 			network.fit(train);
 			
@@ -134,9 +129,9 @@ private static final Logger log = LoggerFactory.getLogger(CifarCompleteEx.class)
 				INDArray output = network.output(testSet.getFeatureMatrix(), false);
 				eval.eval(testSet.getLabels(), output);
 			}
-			log.info(eval.stats());
+			log.error(eval.stats());
 		}
 	}
 	
-	public static void main(String[] args) { new CifarWithSGD().run(args);	}
+	public static void main(String[] args) { new CifarCompleteEx().run(args);	}
 }

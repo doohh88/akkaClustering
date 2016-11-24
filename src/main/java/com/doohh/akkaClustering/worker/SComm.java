@@ -32,11 +32,11 @@ public class SComm extends UntypedActor {
 			if (cmd.getCommand().equals("waitSlave()")) {
 				log.info("wait slave");
 				dmln = (DistMultiLayerNetwork) cmd.getData();
-				synchronized (dmln) {
-					while (canStart == true) {
-						dmln.wait();
-					}
-				}
+//				synchronized (dmln) {
+//					while (canStart == true) {
+//						dmln.wait();
+//					}
+//				}
 
 			}
 		}

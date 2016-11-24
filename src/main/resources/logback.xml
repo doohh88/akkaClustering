@@ -8,6 +8,19 @@
         </encoder>
     </appender>
 
+	<appender name="TIME_BASED_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/distDeep.log</file>
+   	<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">    	
+     		<!-- daily rollover -->
+     		<fileNamePattern>logs/distDeep.%d{yyyy-MM-dd-HH-mm}.log</fileNamePattern>
+     		<maxHistory>30</maxHistory>
+   	</rollingPolicy>
+
+   	<encoder>
+     		<pattern>%relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+   	</encoder>
+ 	</appender>	
+
     <logger name="org.apache.catalina.core" level="DEBUG" />
     <logger name="org.springframework" level="DEBUG" />
     <logger name="org.deeplearning4j" level="INFO" />
@@ -18,6 +31,7 @@
 
 
     <root level="error">
-        <appender-ref ref="STDOUT" />
+        <!-- <appender-ref ref="STDOUT" /> -->
+        <appender-ref ref="TIME_BASED_FILE" />
     </root>
 </configuration>

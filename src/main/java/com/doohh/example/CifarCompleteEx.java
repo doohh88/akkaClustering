@@ -14,6 +14,8 @@ import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
 import org.deeplearning4j.nn.conf.layers.setup.ConvolutionLayerSetup;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.optimize.listeners.CollectScoresIterationListener;
+import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -31,7 +33,9 @@ public class CifarCompleteEx {
 	@Option(name="--batchSize",usage="batchSize",aliases = "-b")
     int batchSize = 128;
     @Option(name="--nEpochs",usage="nEpochs",aliases = "-e")
-    int nEpochs = 100;
+    int nEpochs = 1;
+    @Option(name="--iterations",usage="iterations",aliases = "-i")
+    int iterations = 10;
     @Option(name="--numTrain",usage="numTrain",aliases = "-tr")
     int numTrain = CifarLoader.NUM_TRAIN_IMAGES;
     @Option(name="--numTest",usage="numTest",aliases = "-te")
@@ -42,11 +46,12 @@ public class CifarCompleteEx {
 		CmdLineParser parser = new CmdLineParser(this);
         try {
             parser.parseArgument(args);
-            log.info("batchSize : {}", batchSize);
-            log.info("nEpochs: {}", nEpochs);
+            log.error("batchSize : {}", batchSize);
+            log.error("nEpochs: {}", nEpochs);
+            log.error("iterations: {}", iterations);
         } catch (CmdLineException e) {
             // handling of wrong arguments
-        	log.info(e.getMessage());
+        	log.error(e.getMessage());
             parser.printUsage(System.err);
         }
 
@@ -58,7 +63,7 @@ public class CifarCompleteEx {
 		
 		int nChannels = 3;
 	    int outputNum = 10;
-	    int iterations = 10;
+	    //int iterations = 10;
 	    int splitTrainNum = (int) (batchSize*.8);
 	    int seed = 123;
 	    int listenerFreq = iterations/5;
@@ -108,22 +113,34 @@ public class CifarCompleteEx {
         MultiLayerConfiguration conf = builder.build();
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();
-        network.setListeners(new ScoreIterationListener(listenerFreq));
+        //network.setListeners(new ScoreIterationListener(listenerFreq));
+        //log.info("info");
+        //log.error("error");        
+
+        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq), new CollectScoresIterationListener());
+        
+        long startTime = System.currentTimeMillis();
 		for (int i = 0; i < nEpochs; i++) {
 			network.fit(train);
-			
-			Evaluation eval = new Evaluation(outputNum);
-			test.reset();
-			while (test.hasNext()) {
-				DataSet testSet = test.next();
-				// log.info("{}", testSet.get(0));
-				INDArray output = network.output(testSet.getFeatureMatrix(), false);
-				eval.eval(testSet.getLabels(), output);
-			}
-			log.info(eval.stats());
+			log.error("*** Completed epoch {} ***", i);
 		}
+		long endTime = System.currentTimeMillis();
+		log.error("time: {}", endTime - startTime);
+		Evaluation eval = new Evaluation(outputNum);
+		test.reset();
+		while (test.hasNext()) {
+			DataSet testSet = test.next();
+			INDArray output = network.output(testSet.getFeatureMatrix(), false);
+			eval.eval(testSet.getLabels(), output);
+		}
+		log.error(eval.stats());
+		log.error("****************Example finished********************");
 	}
 	
-	public static void main(String[] args) { new CifarCompleteEx().run(args);	}
+	public static void main(String[] args) { 
+		System.out.println("start...");
+		new CifarCompleteEx().run(args);	
+		System.out.println("finish...");
+	}
 }
 
