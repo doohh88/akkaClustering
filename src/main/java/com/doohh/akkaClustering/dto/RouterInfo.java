@@ -22,6 +22,7 @@ public class RouterInfo implements Serializable {
 
 	private int nNodes;
 	private int nParamServer;
+	private int nProcServer;
 	private ActorRef router;
 	private ArrayList<Range> paramRange = null;
 	private ArrayList<String> paramAddr = null;
@@ -46,8 +47,9 @@ public class RouterInfo implements Serializable {
 	}
 
 	public void setRange(int paramSize) {
-		this.nNodes = paramAddr.size() + slaveAddr.size();
 		this.nParamServer = paramAddr.size();
+		this.nProcServer = slaveAddr.size();
+		this.nNodes = nParamServer + nProcServer;
 		paramRange = new ArrayList<Range>();
 		int q = paramSize / nParamServer;
 		int r = paramSize % nParamServer;
@@ -60,8 +62,6 @@ public class RouterInfo implements Serializable {
 				end = start + q;
 			paramRange.add(new Range(start, end));
 		}
-		// System.out.println("paramSize: " + paramSize);
-		// System.out.println("range: " + paramRange);
 	}
 
 	@Data

@@ -1,4 +1,4 @@
-package com.doohh.nn;
+package com.doohh.akkaClustering.nn;
 
 import java.util.Collection;
 

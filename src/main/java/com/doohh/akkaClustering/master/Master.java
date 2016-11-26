@@ -111,7 +111,3 @@ public class Master extends UntypedActor {
 		}
 	}
 }
-
-// this.resourceMngr.tell(new
-// Command().setCommand("setProcFalse()").setData(getSender().path().address()),
-// getSelf());

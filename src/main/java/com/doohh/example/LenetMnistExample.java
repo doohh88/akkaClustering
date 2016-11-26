@@ -61,17 +61,17 @@ public class LenetMnistExample {
 		
 		int nChannels = 1; // Number of input channels
 		int outputNum = 10; // The number of possible outcomes
-		//int batchSize = 64; // Test batch size
-		//int nEpochs = 1; // Number of training epochs
-		//int iterations = 1; // Number of training iterations
 		int seed = 123; //
-
+		int numExamples = 60000;
 		/*
 		 * Create an iterator using the batch size for one iteration
 		 */
 		log.info("Load data....");
-		DataSetIterator mnistTrain = new MnistDataSetIterator(batchSize, true, 12345);
-		DataSetIterator mnistTest = new MnistDataSetIterator(batchSize, false, 12345);
+		//DataSetIterator mnistTrain = new MnistDataSetIterator(batchSize, true, 12345);
+		//DataSetIterator mnistTest = new MnistDataSetIterator(batchSize, false, 12345);
+		
+		DataSetIterator mnistTrain = new MnistDataSetIterator(batchSize, numExamples, false, true, true, 12345);
+		DataSetIterator mnistTest = new MnistDataSetIterator(batchSize, numExamples, false, false, true, 12345);
 
 		/*
 		 * Construct the neural network
@@ -152,6 +152,7 @@ public class LenetMnistExample {
 		long startTime = System.currentTimeMillis();
 		for (int i = 0; i < nEpochs; i++) {
 			model.fit(mnistTrain);
+			mnistTrain.reset();
 			log.error("*** Completed epoch {} ***", i);
 		}
 		long endTime = System.currentTimeMillis();

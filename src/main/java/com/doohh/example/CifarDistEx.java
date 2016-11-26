@@ -25,7 +25,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.doohh.nn.DistMultiLayerNetwork;
+import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
 
 public class CifarDistEx {
 private static final Logger log = LoggerFactory.getLogger(CifarDistEx.class);

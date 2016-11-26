@@ -1,10 +1,8 @@
-package com.doohh.nn;
+package com.doohh.akkaClustering.nn;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 
 import org.deeplearning4j.datasets.iterator.AsyncDataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
@@ -31,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.doohh.akkaClustering.dto.Command;
+import com.doohh.akkaClustering.dto.RoleInfo;
 import com.doohh.akkaClustering.dto.RouterInfo;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
@@ -45,17 +44,18 @@ import scala.concurrent.Future;
 @Data
 public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private static final Logger log = LoggerFactory.getLogger(DistMultiLayerNetwork.class);
-
-	private Collection<IterationListener> listeners = new ArrayList<>();
-	private Properties props;
-	private String role = null;
-	private String roleIdx = null;
-	private RouterInfo routerInfo = null;
-	private ActorSelection comm = null;
+	
+	private String role;
+	private RoleInfo roleInfo;
+	private RouterInfo routerInfo;	
+	private Collection<IterationListener> listeners = new ArrayList<>();	
 	private Timeout timeout = new Timeout(scala.concurrent.duration.Duration.create(60, "seconds"));
+	
 
-	public DistMultiLayerNetwork(MultiLayerConfiguration conf) {
+	public DistMultiLayerNetwork(MultiLayerConfiguration conf, RoleInfo roleInfo2) {
 		super(conf);
+		this.roleInfo = roleInfo2;
+		this.role = roleInfo.getRole();
 	}
 
 	public void init(INDArray parameters, boolean cloneParametersArray) {
@@ -133,26 +133,12 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			}
 		}
 
-		// init dist configuration
-		// load task.properties & network
-		// this.props = (new LoadTaskProp()).loadTaskProp();
-		this.props = (new LoadTaskProp()).loadTaskProp(WorkerMain.n++);
-		this.role = props.getProperty("role");
-		this.roleIdx = props.getProperty("roleIdx");
-
-		if (this.role.equals("param"))
-			this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/pcomm" + this.roleIdx);
-		else
-			this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/scomm" + this.roleIdx);
-		setNetforProc();
+		
+		// dist init
+		roleInfo.setParamRange(this.numParams());	
+		
 		if (this.role.equals("param")) {
 			RouterInfo.Range range = routerInfo.getParamRange().get(Integer.parseInt(this.roleIdx));
-			// System.out.println("roleIdx: " + this.roleIdx + " range: " +
-			// range);
-			// this.comm.tell(),new Command().setCommand("setParam()").setData(
-			// params().get(NDArrayIndex.interval(0, 1),
-			// NDArrayIndex.interval(range.getStart(), range.getEnd()))
-			// ActorRef.noSender());
 			try {
 				Future<Object> future = Patterns.ask(this.comm, new Command().setCommand("setParam()").setData(params()
 						.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(range.getStart(), range.getEnd()))),
@@ -165,18 +151,13 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			}
 		} else{
 			log.error("slave {}", this);
-//			while(canStart() == false){				
-//			}
 			this.comm.tell(new Command().setCommand("waitSlave()").setData(this), ActorRef.noSender());
-			
 		}
 
 		if (this.role.equals("slave"))
 			log.error("hello i'm slave{}", this.roleIdx);
-		// System.out.println("hello i'm slave" + this.roleIdx);
 		else
 			log.error("hello i'm param{}", this.roleIdx);
-		// System.out.println("hello i'm param" + this.roleIdx);
 	}
 
 	private void initMask() {
@@ -266,33 +247,6 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			Environment env = EnvironmentUtils.buildEnvironment();
 			heartbeat.reportEvent(Event.STANDALONE, env, task);
 		}
-	}
-
-	private void setNetforProc() {
-		this.routerInfo = new RouterInfo();
-		String paramAddrs = props.getProperty("paramNodes");
-		this.routerInfo.setParamAddr(new ArrayList<String>(Arrays.asList(new String(paramAddrs).split(","))));
-		String slaveAddrs = props.getProperty("slaveNodes");
-		this.routerInfo.setSlaveAddr(new ArrayList<String>(Arrays.asList(new String(slaveAddrs).split(","))));
-		this.routerInfo.setActorSelection();
-		this.routerInfo.setRange(this.numParams());
-	}
-
-	private boolean canStart(){
-		boolean[] arr = new boolean[100];
-		if (this.role.equals("slave")) {
-			for (int idx = 0; idx < routerInfo.getNParamServer(); idx++) {
-				ActorSelection as = routerInfo.getParamComms().get(idx);
-				try {
-					Future<Object> future = Patterns.ask(as, new Command().setCommand("pullParam()").setData(null),
-							timeout);
-					INDArray param = (INDArray) Await.result(future, timeout.duration());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return false;
 	}
 	
 	private void pullParam() {

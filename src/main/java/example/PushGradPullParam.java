@@ -11,8 +11,8 @@ import org.nd4j.linalg.factory.Nd4j;
 
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.dto.RouterInfo;
+import com.doohh.akkaClustering.nn.LoadTaskProp;
 import com.doohh.akkaClustering.worker.WorkerMain;
-import com.doohh.nn.LoadTaskProp;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;

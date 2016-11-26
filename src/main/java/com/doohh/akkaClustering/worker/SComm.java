@@ -4,7 +4,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
 import com.doohh.akkaClustering.dto.Command;
-import com.doohh.nn.DistMultiLayerNetwork;
+import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
 
 import akka.actor.UntypedActor;
 import akka.event.Logging;
