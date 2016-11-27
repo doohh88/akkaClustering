@@ -1,13 +1,10 @@
 package com.doohh.akkaClustering.master;
 
-import java.util.Hashtable;
-
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.dto.Node;
 import com.doohh.akkaClustering.worker.Worker;
 
 import akka.actor.ActorRef;
-import akka.actor.Address;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.cluster.Cluster;
@@ -76,9 +73,10 @@ public class Master extends UntypedActor {
 			// deploy part
 			if (cmd.getCommand().equals("submit()")) {
 				log.info("starting submit()");
+				getSender().tell("received command and launching applicaiton", getSelf());
 				launcher.tell(cmd, getSelf());
 				log.info("sended appConf to master");
-				getSender().tell("received command and launching applicaiton", getSelf());
+				
 			}
 			if (cmd.getCommand().equals("finishApp()")) {
 				log.info("finishApp()");
@@ -90,14 +88,7 @@ public class Master extends UntypedActor {
 						getSelf());
 			}
 
-		}
-
-		else if (message instanceof Sample) {
-			System.out.println("Hello world");
-			System.out.println((Sample) message);
-		}
-
-		else if (message instanceof String) {
+		} else if (message instanceof String) {
 			log.info("received msg = {}", (String) message);
 		} else {
 			log.info("received unhandled msg");

@@ -107,7 +107,7 @@ private static final Logger log = LoggerFactory.getLogger(CifarDistEx.class);
 
         new ConvolutionLayerSetup(builder,32,32,nChannels);
         MultiLayerConfiguration conf = builder.build();
-        MultiLayerNetwork network = new DistMultiLayerNetwork(conf);
+        MultiLayerNetwork network = new DistMultiLayerNetwork(conf, null);
         network.init();
         network.setListeners(new ScoreIterationListener(listenerFreq));
 		        

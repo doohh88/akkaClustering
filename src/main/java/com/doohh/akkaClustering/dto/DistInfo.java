@@ -6,14 +6,15 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import com.doohh.akkaClustering.nn.DistMnistDataFetcher;
-import com.doohh.akkaClustering.nn.LoadTaskProp;
 import com.doohh.akkaClustering.worker.WorkerMain;
 
 import akka.actor.ActorSelection;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
-public class RoleInfo implements Serializable {
+@ToString
+public class DistInfo implements Serializable {
 	/**
 	 * 
 	 */
@@ -23,27 +24,18 @@ public class RoleInfo implements Serializable {
 	private int roleIdx;
 	private RouterInfo routerInfo;
 	private ActorSelection comm;
+	private ActorSelection controller;
 
-	public void init() {
-		// load task.properties & network
-		// this.props = (new LoadTaskProp()).loadTaskProp();
-		this.props = (new LoadTaskProp()).loadTaskProp(WorkerMain.n++);
-		this.role = props.getProperty("role");
-		this.roleIdx = Integer.parseInt(props.getProperty("roleIdx"));
+	public void init(AppConf appConf) {
+		this.role = appConf.getRole();
+		this.roleIdx = appConf.getRoleIdx();
 		if (this.role.equals("param"))
 			this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/pcomm" + this.roleIdx);
 		else
 			this.comm = WorkerMain.actorSystem.actorSelection("/user/worker/task/scomm" + this.roleIdx);
-		setNetforProc();
-	}
-
-	private void setNetforProc() {
-		this.routerInfo = new RouterInfo();
-		String paramAddrs = props.getProperty("paramNodes");
-		this.routerInfo.setParamAddr(new ArrayList<String>(Arrays.asList(new String(paramAddrs).split(","))));
-		String slaveAddrs = props.getProperty("slaveNodes");
-		this.routerInfo.setSlaveAddr(new ArrayList<String>(Arrays.asList(new String(slaveAddrs).split(","))));
+		this.routerInfo = appConf.getRouterInfo();
 		this.routerInfo.setActorSelection();
+		this.controller = WorkerMain.actorSystem.actorSelection(this.routerInfo.getParamAddr().get(0) + "/controller");
 	}
 
 	public void setParamRange(int numParmas) {
@@ -60,3 +52,13 @@ public class RoleInfo implements Serializable {
 		return numExamples;
 	}
 }
+
+/*
+ * private void setNetforProc() { this.routerInfo = new RouterInfo(); String
+ * paramAddrs = props.getProperty("paramNodes");
+ * this.routerInfo.setParamAddr(new ArrayList<String>(Arrays.asList(new
+ * String(paramAddrs).split(",")))); String slaveAddrs =
+ * props.getProperty("slaveNodes"); this.routerInfo.setSlaveAddr(new
+ * ArrayList<String>(Arrays.asList(new String(slaveAddrs).split(","))));
+ * this.routerInfo.setActorSelection(); }
+ */

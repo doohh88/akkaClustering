@@ -28,8 +28,8 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.doohh.akkaClustering.dto.RoleInfo;
-import com.doohh.akkaClustering.nn.DistMnistDataFetcher;
+import com.doohh.akkaClustering.dto.AppConf;
+import com.doohh.akkaClustering.dto.DistInfo;
 import com.doohh.akkaClustering.nn.DistMnistDataSetIterator;
 import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
 
@@ -45,6 +45,7 @@ public class LenetDistEx {
 	int nEpochs = 1;
 	@Option(name = "--iterations", usage = "iterations", aliases = "-i")
 	int iterations = 1;
+	private AppConf appConf;
 
 	private void parseArgs(String[] args) {
 		CmdLineParser parser = new CmdLineParser(this);
@@ -61,37 +62,35 @@ public class LenetDistEx {
 
 	}
 
-	void run(String[] args) throws IOException {
+	void run(AppConf appConf, String[] args) throws IOException {
 		this.parseArgs(args);
 
 		int nChannels = 1; // Number of input channels
 		int outputNum = 10; // The number of possible outcomes
 		int seed = 123; //
 		int numExamples = 0;
-		RoleInfo roleInfo = null;
+		DistInfo roleInfo = null;
 		/*
 		 * Create an iterator using the batch size for one iteration
 		 */
 		log.info("Load role....");
-		roleInfo = new RoleInfo();
-		roleInfo.init();
-		
-		DataSetIterator mnistTrain = null; 
+		roleInfo = new DistInfo();
+		roleInfo.init(appConf);
+
+		DataSetIterator mnistTrain = null;
 		DataSetIterator mnistTest = null;
-		if(roleInfo.getRole().equals("slave")){
+		if (roleInfo.getRole().equals("slave")) {
 			log.info("Load data....");
 			numExamples = roleInfo.getNumExamples("DistMnistDataFetcher");
 			mnistTrain = new DistMnistDataSetIterator(batchSize, numExamples, false, true, true, 12345, roleInfo);
 			mnistTest = new MnistDataSetIterator(batchSize, false, 12345);
 		}
 
-		/* 
+		/*
 		 * Construct the neural network
 		 */
 		log.info("Build model....");
-		MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
-				.seed(seed)
-				.iterations(iterations) // Training iterations as above
+		MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder().seed(seed).iterations(iterations)
 				.regularization(true).l2(0.0005)
 				/*
 				 * Uncomment the following for learning decay and bias
@@ -101,19 +100,12 @@ public class LenetDistEx {
 				.weightInit(WeightInit.XAVIER).optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
 				.updater(Updater.NESTEROVS).momentum(0.9).list()
 				.layer(0,
-						new ConvolutionLayer.Builder(5, 5)
-								// nIn and nOut specify depth. nIn here is the
-								// nChannels and nOut is the number of filters
-								// to be applied
-								.nIn(nChannels).stride(1, 1).nOut(20).activation("identity").build())
+						new ConvolutionLayer.Builder(5, 5).nIn(nChannels).stride(1, 1).nOut(20).activation("identity")
+								.build())
 				.layer(1,
 						new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
 								.build())
-				.layer(2,
-						new ConvolutionLayer.Builder(5, 5)
-								// Note that nIn need not be specified in later
-								// layers
-								.stride(1, 1).nOut(50).activation("identity").build())
+				.layer(2, new ConvolutionLayer.Builder(5, 5).stride(1, 1).nOut(50).activation("identity").build())
 				.layer(3,
 						new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
 								.build())
@@ -121,31 +113,7 @@ public class LenetDistEx {
 				.layer(5,
 						new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD).nOut(outputNum)
 								.activation("softmax").build())
-				.setInputType(InputType.convolutionalFlat(28, 28, 1)) // See
-																		// note
-																		// below
-				.backprop(true).pretrain(false);
-
-		/*
-		 * - Regarding the .setInputType(InputType.convolutionalFlat(28,28,1))
-		 * line: This does a few things. - (a) It adds preprocessors, which
-		 * handle things like the transition between the
-		 * convolutional/subsampling layers - and the dense layers - (b) Does
-		 * some additional configuration validation - (c) Where necessary, sets
-		 * the nIn (number of input neurons, or input depth in the case of CNNs)
-		 * values for each - layer based on the size of the previous layer (but
-		 * it won't override values manually set by the user) - - In earlier
-		 * versions of DL4J, the (now deprecated) ConvolutionLayerSetup class
-		 * was used instead for this. - InputTypes can be used with other layer
-		 * types too (RNNs, MLPs etc) not just CNNs. - For normal images (when
-		 * using ImageRecordReader) use
-		 * InputType.convolutional(height,width,depth). - MNIST record reader is
-		 * a special case, that outputs 28x28 pixel grayscale (nChannels=1)
-		 * images, in a "flattened" - row vector format (i.e., 1x784 vectors),
-		 * hence the "convolutionalFlat" input type used here. -
-		 */
-		// The builder needs the dimensions of the image along with the number
-		// of channels. these are 28x28 images in one channel
+				.setInputType(InputType.convolutionalFlat(28, 28, 1)).backprop(true).pretrain(false);
 
 		MultiLayerConfiguration conf = builder.build();
 		MultiLayerNetwork model = new DistMultiLayerNetwork(conf, roleInfo);
@@ -176,10 +144,10 @@ public class LenetDistEx {
 		log.error("****************Example finished********************");
 	}
 
-	public static void main(String[] args) {
+	public static void main(AppConf appConf, String[] args) {
 		System.out.println("start...");
 		try {
-			new LenetMnistExample().run(args);
+			new LenetDistEx().run(appConf, args);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

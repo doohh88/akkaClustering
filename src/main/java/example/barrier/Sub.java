@@ -21,9 +21,11 @@ public class Sub {
 	public static String hostIP = "127.0.0.1";
 	@Option(name = "--port", usage = "port", aliases = "-p")
 	public static String port = "0";
+	@Option(name = "--n", usage = "n", aliases = "-n")
+	public static int n = 0;
 	public static String systemName = "deepDist";
 	public static ActorSystem actorSystem = null;
-	public static int n = 0;
+	
 
 	public static void main(String[] args) {
 		String seedNodes = PropFactory.getInstance("config.properties").getSeedConf("worker");
@@ -39,7 +41,7 @@ public class Sub {
 				.withFallback(ConfigFactory.load("application"));
 
 		actorSystem = ActorSystem.create(systemName, conf);
-		ActorRef subActor = actorSystem.actorOf(Props.create(SubActor.class), "subActor");
+		ActorRef subActor = actorSystem.actorOf(Props.create(SubActor.class, n), "subActor");
 		subActor.tell("run()", ActorRef.noSender());
 
 	}

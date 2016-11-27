@@ -22,12 +22,20 @@ public class Util {
 		for (int i = 0; i < argsLen; i++) {
 			// if (args[i].equals("--class") || args[i].equals("-c")) {
 			if (args[i].equals(splitOp)) {
-				int appArgsLen = argsLen - i - 2;
-				int parseArgsLen = i + 2;
-				appArgs = new String[appArgsLen];
-				parseArgs = new String[parseArgsLen];
-				System.arraycopy(args, parseArgsLen, appArgs, 0, appArgsLen);
-				System.arraycopy(args, 0, parseArgs, 0, parseArgsLen);
+				if (argsLen == i + 2) {
+					// no appARgs
+					parseArgs = args;
+					appArgs = new String[0];
+				} else {
+					System.out.println("argsLen: " + argsLen);
+					System.out.println("i: " + i);
+					int appArgsLen = argsLen - i - 2;
+					int parseArgsLen = i + 2;
+					appArgs = new String[appArgsLen];
+					System.arraycopy(args, parseArgsLen, appArgs, 0, appArgsLen);
+					parseArgs = new String[parseArgsLen];
+					System.arraycopy(args, 0, parseArgs, 0, parseArgsLen);
+				}
 				break;
 			}
 		}
@@ -69,17 +77,17 @@ public class Util {
 			e.printStackTrace();
 		}
 	}
-	
-	public static String getHomeDir(){
+
+	public static String getHomeDir() {
 		String homeDir = System.getProperty("user.dir");
 		int i = homeDir.lastIndexOf("/bin");
-		if(i != -1){
+		if (i != -1) {
 			homeDir = homeDir.substring(0, i);
 		}
 		return homeDir;
 	}
-	
-	public static File[] getFileList(String path){
+
+	public static File[] getFileList(String path) {
 		File dirFile = new File(path);
 		File[] fileList = dirFile.listFiles();
 		return fileList;

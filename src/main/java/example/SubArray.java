@@ -1,23 +1,67 @@
 package example;
 
-import org.deeplearning4j.util.MathUtils;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.nd4j.Nd4jSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.indexing.NDArrayIndex;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 public class SubArray {
 	public static void main(String[] args) {
-		//INDArray a = Nd4j.create(new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, new int[]{1, 10});
-		int[] order = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+		Kryo kryo = new Kryo();
+//		kryo.register(Nd4j.getBackend().getNDArrayClass(), new Nd4jSerializer());
+//        kryo.register(Nd4j.getBackend().getComplexNDArrayClass(), new Nd4jSerializer());
+//		kryo.register(INDArray.class, new Nd4jSerializer());
+//		kryo.register(org.nd4j.linalg.cpu.nativecpu.NDArray.class, new Nd4jSerializer());
+
 		
-		for(int i = 0 ;i < order.length; i++)
-			System.out.print(order[i] + " ");
-		System.out.println();
+		INDArray a = Nd4j.create(new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, new int[]{1, 20});
+		System.out.println(a.size(1));
+		System.out.println(a.length());
 		
-		MathUtils.shuffleArray(order, 123);
-		for(int i = 0 ;i < order.length; i++)
-			System.out.print(order[i] + " ");
-		System.out.println();
+		Nd4jSerializer se = new Nd4jSerializer();
+	    Output output = new Output(150);
+		se.write(kryo, output, a);
+	    System.out.println(output.toBytes().length);
+		byte[] b = output.toBytes();
+		
+	    Input input = new Input(b);
+	    INDArray rst = (INDArray) se.read(kryo, input, INDArray.class);
+	    System.err.println(rst);
+	    
+//		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+//	    Input ki = new Input(bis);
+//	    se.read(kryo, ki, INDArray.class);
+	    
+	    //kryo.writeObject(ko, a);
+	    
+	    
+	   // INDArray des = (INDArray)kryo.readObject(ki, INDArray.class);
+	   // System.out.println(des);
+//		INDArray b = a;
+		//System.out.println(b);
+//		System.out.println(a.size(1)); //20
+//		INDArray f = a.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(0, 20));
+//		//INDArray b = a.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(10, 20));
+//		System.out.println(f);
+//		//System.out.println(b);
+		
+		//int[] order = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+
+		
+		
+//		for(int i = 0 ;i < order.length; i++)
+//			System.out.print(order[i] + " ");
+//		System.out.println();
+//		
+//		MathUtils.shuffleArray(order, 123);
+//		for(int i = 0 ;i < order.length; i++)
+//			System.out.print(order[i] + " ");
+//		System.out.println();
 		// INDArray a = Nd4j.create(new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 		// 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, new int[]{1, 10});
 		// INDArray a = Nd4j.create(new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},

@@ -1,6 +1,8 @@
 package com.doohh.akkaClustering.master;
 
 import org.kohsuke.args4j.Option;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,8 +14,6 @@ import com.typesafe.config.ConfigFactory;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.serialization.Serialization;
-import akka.serialization.SerializationExtension;
 
 public class MasterMain {
 	private static final Logger log = LoggerFactory.getLogger(MasterMain.class);
@@ -38,5 +38,8 @@ public class MasterMain {
 
 		ActorSystem actorSystem = ActorSystem.create(systemName, conf);
 		ActorRef master = actorSystem.actorOf(Props.create(Master.class), "master");
+
+		// load nd4j lib
+		INDArray lib = Nd4j.zeros(1);
 	}
 }

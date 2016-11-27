@@ -8,7 +8,7 @@ import java.net.URLClassLoader;
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.util.Util;
-import com.doohh.example.LenetDistEx;
+import com.doohh.example.DistTest;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
@@ -27,15 +27,15 @@ public class Task extends UntypedActor {
 	private ActorRef comm = null;
 	private final ExecutionContext ec;
 	private Timeout timeout = new Timeout(Duration.create(10, "seconds"));
-private int nTotalApp = 0;
-private int nFinishedApp = 0;
-private AppConf appConf = null;
+	private int nTotalApp = 0;
+	private int nFinishedApp = 0;
+	private AppConf appConf = null;
 
-public Task() {
-	ec = context().system().dispatcher();
-}
+	public Task() {
+		ec = context().system().dispatcher();
+	}
 
-@Override
+	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof Command) {
 			Command cmd = (Command) message;
@@ -46,35 +46,23 @@ public Task() {
 				master = getContext().actorSelection(getSender().path().address() + "/user/master");
 				nTotalApp = appConf.getNMaster() + appConf.getNWorker();
 				generateComm(appConf);
-				writeTaskProp(appConf);
+				
+				// writeTaskProp(appConf);
 
 				// *******************
 				// running application
 				// runApp(appConf);
 				// new LoadTaskPropMain().main(null);
 				// new DistLenet().main(null);
-				new LenetDistEx().main(null);
+				// new LenetDistEx().main(appConf, null);
+				new DistTest().main(appConf, appConf.getArgs());
+				// new DistTest().main(appConf, new String[0]);
 				// new HashTableMain().main(null);
 				// new PushGradPullParam().main(null);
 				// *******************
 
-				// log.info("send msg(complet task) to {}", getSender());
-				// master.tell(new
-				// Command().setCommand("finishApp()").setData(appConf.getRouterInfo()),
-				// getSelf());
-			}
-			// if(cmd.getCommand().equals("generatePcomm()")){
-			// generatePcomm();
-			// }
-			// if(cmd.getCommand().equals("generateScomm()")){
-			// generateScomm();
-			// }
-			if (cmd.getCommand().equals("finish()")) {
-				nFinishedApp++;
-				if (nFinishedApp == nTotalApp) { // all app finish
-					log.info("send msg(complet task) to {}", getSender());
-					master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());
-				}
+				/*log.info("send msg(complet task) to {}", getSender());
+				master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());*/
 			}
 		}
 
@@ -96,10 +84,20 @@ public Task() {
 			URL classURL = new URL("jar:" + jarFile.toURI().toURL() + "!/");
 			URLClassLoader classLoader = new URLClassLoader(new URL[] { classURL });
 			Class<?> clazz = classLoader.loadClass(classPath);
-			Method method = clazz.getMethod("main", String[].class);
-			method.invoke(null, (Object) args);
+			Method method = clazz.getMethod("main", AppConf.class, String[].class);
+			method.invoke(null, appConf, (Object) args);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	void generateComm(AppConf appConf) {
+		String role = appConf.getRole();
+		if (role.equals("param")) {
+			this.comm = context().actorOf(Props.create(PComm.class, appConf.getNMaster(), appConf.getRoleIdx()),
+					"pcomm" + appConf.getRoleIdx());
+		} else {
+			this.comm = context().actorOf(Props.create(SComm.class), "scomm" + appConf.getRoleIdx());
 		}
 	}
 
@@ -119,27 +117,5 @@ public Task() {
 		}
 		content = content.substring(0, content.length() - 1);
 		Util.write(fileName, content);
-	}
-
-	void generateComm(AppConf appConf) {
-		String role = appConf.getRole();
-		if (role.equals("param")) {
-			// this.comm = context().actorOf(Props.create(PComm.class,
-			// appConf.getRoleIdx()), "pcomm");
-			this.comm = context().actorOf(Props.create(PComm.class, appConf.getNMaster(), appConf.getRoleIdx()),
-					"pcomm" + appConf.getRoleIdx());
-		} else {
-			this.comm = context().actorOf(Props.create(SComm.class), "scomm" + appConf.getRoleIdx());
-		}
-	}
-
-	void generatePcomm() {
-		String role = appConf.getRole();
-		this.comm = context().actorOf(Props.create(PComm.class, appConf.getNMaster(), appConf.getRoleIdx()), "pcomm");
-	}
-
-	void generateScomm() {
-		String role = appConf.getRole();
-		this.comm = context().actorOf(Props.create(SComm.class), "scomm");
 	}
 }

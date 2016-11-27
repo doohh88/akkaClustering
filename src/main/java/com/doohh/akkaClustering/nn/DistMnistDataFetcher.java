@@ -14,7 +14,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
-import com.doohh.akkaClustering.dto.RoleInfo;
+import com.doohh.akkaClustering.dto.DistInfo;
 
 public class DistMnistDataFetcher extends BaseDataFetcher {
 	public static final int NUM_EXAMPLES = 60000;
@@ -41,10 +41,10 @@ public class DistMnistDataFetcher extends BaseDataFetcher {
 		this(binarize, true, true, System.currentTimeMillis(), null);
 	}
 
-	public DistMnistDataFetcher(boolean binarize, boolean train, boolean shuffle, long rngSeed, RoleInfo roleInfo)
+	public DistMnistDataFetcher(boolean binarize, boolean train, boolean shuffle, long rngSeed, DistInfo distInfo)
 			throws IOException {
 		// dist init
-		initCursor = NUM_EXAMPLES / roleInfo.getRouterInfo().getNProcServer() * roleInfo.getRoleIdx();
+		initCursor = NUM_EXAMPLES / distInfo.getRouterInfo().getNProcServer() * distInfo.getRoleIdx();
 
 		if (!mnistExists()) {
 			new MnistFetcher().downloadAndUntar();

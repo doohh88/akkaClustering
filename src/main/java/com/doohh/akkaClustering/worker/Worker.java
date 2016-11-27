@@ -28,6 +28,7 @@ public class Worker extends UntypedActor {
 	private Hashtable<Address, Node> masters = new Hashtable<Address, Node>();
 	private AppConf userAppConf;
 	private ActorRef task = null;
+	private ActorRef controller = null;
 	private ActorSelection master = null;
 
 	// subscribe to cluster changes, MemberUp
@@ -59,13 +60,20 @@ public class Worker extends UntypedActor {
 		else if (message instanceof Command) {
 			Command cmd = (Command) message;
 			if (cmd.getCommand().equals("submit()")) {
-				getSender().tell("receive appConf from launcher", getSelf());
 				AppConf appConf = (AppConf) cmd.getData();
 				log.info("get appConf from master : {}", appConf);
-				task = context().actorOf(Props.create(Task.class), "task");
+				getSender().tell("receive appConf from launcher", getSelf());
+
+				if(appConf.getRole().equals("param") && appConf.getRoleIdx() == 0){
+					log.info("generate contoller for managing app");
+					this.controller = context().actorOf(Props.create(Controller.class), "controller");					
+				}				
+				
 				log.info("generate task for proc");
-				log.info("getSender: {}", getSender());
+				task = context().actorOf(Props.create(Task.class), "task");
 				task.tell(new Command().setCommand("runApp()").setData(appConf), getSender());
+				
+				
 			}
 			if (cmd.getCommand().equals("stopTask()")) {
 				log.info("stopTask()");

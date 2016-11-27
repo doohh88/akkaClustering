@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.deeplearning4j.datasets.iterator.BaseDatasetIterator;
 
-import com.doohh.akkaClustering.dto.RoleInfo;
+import com.doohh.akkaClustering.dto.DistInfo;
 
 public class DistMnistDataSetIterator extends BaseDatasetIterator {
 	
@@ -44,7 +44,7 @@ public class DistMnistDataSetIterator extends BaseDatasetIterator {
         super(batch, numExamples,new DistMnistDataFetcher(binarize,train,shuffle,rngSeed, null));
     }
     
-    public DistMnistDataSetIterator(int batch, int numExamples, boolean binarize, boolean train, boolean shuffle, long rngSeed, RoleInfo roleInfo) throws IOException {
-    	super(batch, numExamples,new DistMnistDataFetcher(binarize,train,shuffle,rngSeed, roleInfo));
+    public DistMnistDataSetIterator(int batch, int numExamples, boolean binarize, boolean train, boolean shuffle, long rngSeed, DistInfo distInfo) throws IOException {
+    	super(batch, numExamples,new DistMnistDataFetcher(binarize,train,shuffle,rngSeed, distInfo));
     }
 }
