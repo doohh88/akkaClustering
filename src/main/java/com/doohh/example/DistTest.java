@@ -3,6 +3,7 @@ package com.doohh.example;
 import java.io.IOException;
 
 import org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -18,6 +19,8 @@ import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.api.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -27,7 +30,6 @@ import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.DistInfo;
 import com.doohh.akkaClustering.nn.DistMnistDataSetIterator;
 import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
-import com.doohh.akkaClustering.worker.Controller;
 
 public class DistTest {
 	private static final Logger log = LoggerFactory.getLogger(DistTest.class);
@@ -72,7 +74,7 @@ public class DistTest {
 		log.info("Load distInfo....");
 		distInfo = new DistInfo();
 		distInfo.init(appConf);
-		
+
 		log.info("Load data....");
 		if (distInfo.getRole().equals("slave")) {
 			numExamples = distInfo.getNumExamples("DistMnistDataFetcher");
@@ -113,17 +115,28 @@ public class DistTest {
 			MultiLayerNetwork model = new DistMultiLayerNetwork(conf, distInfo);
 			model.init();
 			model.setListeners(new ScoreIterationListener(1));
-			
-			
-//			log.error("Train model....");
-//			long startTime = System.currentTimeMillis();
-//			for (int i = 0; i < nEpochs; i++) {
-//				model.fit(mnistTrain);
-//				mnistTrain.reset();
-//				log.error("*** Completed epoch {} ***", i);
-//			}
-//			long endTime = System.currentTimeMillis();
-//			log.error("time: {}", endTime - startTime);
+
+			log.error("Train model....");
+			long startTime = System.currentTimeMillis();
+			for (int i = 0; i < nEpochs; i++) {
+				model.fit(mnistTrain);
+				mnistTrain.reset();
+				log.error("*** Completed epoch {} ***", i);
+			}
+			long endTime = System.currentTimeMillis();
+			log.error("time: {}", endTime - startTime);
+
+			if (distInfo.getRoleIdx() == 0) {
+				log.error("Evaluate model....");
+				Evaluation eval = new Evaluation(outputNum);
+				while (mnistTest.hasNext()) {
+					DataSet ds = mnistTest.next();
+					INDArray output = model.output(ds.getFeatureMatrix(), false);
+					eval.eval(ds.getLabels(), output);
+				}
+				log.error(eval.stats());
+				log.error("****************Example finished********************");
+			}
 		}
 	}
 
@@ -133,7 +146,7 @@ public class DistTest {
 			new DistTest().run(appConf, args);
 		} catch (IOException e) {
 			e.printStackTrace();
-		}		
+		}
 		System.out.println("finish...");
 	}
 }

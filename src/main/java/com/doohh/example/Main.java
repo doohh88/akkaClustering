@@ -6,7 +6,7 @@ import com.doohh.akkaClustering.worker.WorkerMain;
 
 public class Main {
 	public static void main(String[] args) {
-		int nWorker = 4;
+		int nWorker = 5;
 		MasterMain.main(args);
 		for (int i = 0; i < nWorker; i++)
 			new WorkerMain().main(args);

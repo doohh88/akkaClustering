@@ -50,12 +50,12 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private Collection<IterationListener> listeners = new ArrayList<>();
 	private Timeout timeout = new Timeout(scala.concurrent.duration.Duration.create(10, "minutes"));
 	private Nd4jSerialization nd4jSerialization;
-	
+
 	public DistMultiLayerNetwork(MultiLayerConfiguration conf, DistInfo distInfo2) {
 		super(conf);
 		this.distInfo = distInfo2;
 		this.role = distInfo.getRole();
-		nd4jSerialization = new Nd4jSerialization();		
+		nd4jSerialization = new Nd4jSerialization();
 	}
 
 	public void init(INDArray parameters, boolean cloneParametersArray) {
@@ -155,70 +155,69 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 
 	@Override
 	public void fit(DataSetIterator iterator) {
-		if (this.role.equals("slave")) {
-			DataSetIterator iter;
-			// we're wrapping all iterators into AsyncDataSetIterator to provide
-			// background prefetch
-			if (!(iterator instanceof AsyncDataSetIterator || iterator instanceof ListDataSetIterator
-					|| iterator instanceof MultipleEpochsIterator)) {
-				iter = new AsyncDataSetIterator(iterator, 2);
-			} else
-				iter = iterator;
+		DataSetIterator iter;
+		// we're wrapping all iterators into AsyncDataSetIterator to provide
+		// background prefetch
+		if (!(iterator instanceof AsyncDataSetIterator || iterator instanceof ListDataSetIterator
+				|| iterator instanceof MultipleEpochsIterator)) {
+			iter = new AsyncDataSetIterator(iterator, 2);
+		} else
+			iter = iterator;
 
-			// cnn -> false
-			if (layerWiseConfigurations.isPretrain()) {
-				pretrain(iter);
-				iter.reset();
-				while (iter.hasNext()) {
-					DataSet next = iter.next();
-					if (next.getFeatureMatrix() == null || next.getLabels() == null)
-						break;
-					setInput(next.getFeatureMatrix());
-					setLabels(next.getLabels());
-					finetune();
-				}
-			}
-
-			if (layerWiseConfigurations.isBackprop()) {
-				if (layerWiseConfigurations.isPretrain())
-					iter.reset();
-				update(TaskUtils.buildTask(iter));
-				iter.reset();
-
-				// pullParam();
-				while (iter.hasNext()) {
-					DataSet next = iter.next();
-					if (next.getFeatureMatrix() == null || next.getLabels() == null)
-						break;
-
-					boolean hasMaskArrays = next.hasMaskArrays();
-
-					if (layerWiseConfigurations.getBackpropType() == BackpropType.TruncatedBPTT) {
-						doTruncatedBPTT(next.getFeatureMatrix(), next.getLabels(), next.getFeaturesMaskArray(),
-								next.getLabelsMaskArray());
-					} else {
-						if (hasMaskArrays)
-							setLayerMaskArrays(next.getFeaturesMaskArray(), next.getLabelsMaskArray());
-						setInput(next.getFeatureMatrix());
-						setLabels(next.getLabels());
-						if (solver == null) {
-							// if SGD -> stepFunction =
-							// NegativeGradientStepFunction
-							// (default)
-							solver = new DistSolver.Builder().configure(conf()).listeners(getListeners()).model(this)
-									.build();
-						}
-						solver.optimize();
-					}
-
-					if (hasMaskArrays)
-						clearLayerMaskArrays();
-
-					// push & pull parameters from master
-					pushGradPullParam();
-				}
+		// cnn -> false
+		if (layerWiseConfigurations.isPretrain()) {
+			pretrain(iter);
+			iter.reset();
+			while (iter.hasNext()) {
+				DataSet next = iter.next();
+				if (next.getFeatureMatrix() == null || next.getLabels() == null)
+					break;
+				setInput(next.getFeatureMatrix());
+				setLabels(next.getLabels());
+				finetune();
 			}
 		}
+
+		if (layerWiseConfigurations.isBackprop()) {
+			if (layerWiseConfigurations.isPretrain())
+				iter.reset();
+			update(TaskUtils.buildTask(iter));
+			iter.reset();
+
+			// pullParam();
+			while (iter.hasNext()) {
+				DataSet next = iter.next();
+				if (next.getFeatureMatrix() == null || next.getLabels() == null)
+					break;
+
+				boolean hasMaskArrays = next.hasMaskArrays();
+
+				if (layerWiseConfigurations.getBackpropType() == BackpropType.TruncatedBPTT) {
+					doTruncatedBPTT(next.getFeatureMatrix(), next.getLabels(), next.getFeaturesMaskArray(),
+							next.getLabelsMaskArray());
+				} else {
+					if (hasMaskArrays)
+						setLayerMaskArrays(next.getFeaturesMaskArray(), next.getLabelsMaskArray());
+					setInput(next.getFeatureMatrix());
+					setLabels(next.getLabels());
+					if (solver == null) {
+						// if SGD -> stepFunction =
+						// NegativeGradientStepFunction
+						// (default)
+						solver = new DistSolver.Builder().configure(conf()).listeners(getListeners()).model(this)
+								.build();
+					}
+					solver.optimize();
+				}
+
+				if (hasMaskArrays)
+					clearLayerMaskArrays();
+
+				// push & pull parameters from master
+				pushGradPullParam();
+			}
+		}
+		pullParam();
 	}
 
 	private void update(Task task) {
@@ -237,7 +236,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		if (distInfo.getRoleIdx() == 0) {
 			int nParamServer = distInfo.getRouterInfo().getNParamServer();
 			RouterInfo routerInfo = distInfo.getRouterInfo();
-			log.error("{}",routerInfo.getParamComms());
+			log.error("{}", routerInfo.getParamComms());
 			for (int idx = 0; idx < nParamServer; idx++) {
 				ActorSelection as = routerInfo.getParamComms().get(idx);
 				try {
@@ -245,8 +244,9 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 					start = range.getStart();
 					end = range.getEnd();
 					log.error("numParams: {}, start: {}, end: {}", this.numParams(), start, end);
-					param = flattenedParams.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end));					
-					Future<Object> future = Patterns.ask(as, new Command().setCommand("initParam()").setData(nd4jSerialization.serialize(param.length()*8, param)),
+					param = flattenedParams.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end));
+					Future<Object> future = Patterns.ask(as,
+							new Command().setCommand("initParam()").setData(nd4jSerialization.serialize(param)),
 							timeout);
 					Await.result(future, timeout.duration());
 				} catch (Exception e) {
@@ -256,43 +256,20 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		}
 	}
 
-	// private void pullParam() {
-	// int start, end;
-	// if (this.role.equals("slave")) {
-	// for (int idx = 0; idx < routerInfo.getNParamServer(); idx++) {
-	// ActorSelection as = routerInfo.getParamComms().get(idx);
-	// try {
-	// RouterInfo.Range range = routerInfo.getParamRange().get(idx);
-	// start = range.getStart();
-	// end = range.getEnd();
-	// System.out.println("start: " + start);
-	// System.out.println("end: " + end);
-	// Future<Object> future = Patterns.ask(as, new
-	// Command().setCommand("pullParam()").setData(null),
-	// timeout);
-	// INDArray param = (INDArray) Await.result(future, timeout.duration());
-	// flattenedParams.get(NDArrayIndex.interval(0, 1),
-	// NDArrayIndex.interval(start, end)).assign(param);
-	// } catch (Exception e) {
-	// e.printStackTrace();
-	// }
-	// }
-	// }
-	// }
-	//
 	private void pushGradPullParam() {
 		INDArray gradient;
 		int start, end;
 		int nParamServer = distInfo.getRouterInfo().getNParamServer();
 		RouterInfo routerInfo = distInfo.getRouterInfo();
-		for (int idx = 0; idx < routerInfo.getNParamServer(); idx++) {
+		for (int idx = 0; idx < nParamServer; idx++) {
 			ActorSelection as = routerInfo.getParamComms().get(idx);
 			try {
 				RouterInfo.Range range = routerInfo.getParamRange().get(idx);
 				start = range.getStart();
 				end = range.getEnd();
 				gradient = this.flattenedGradients.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end));
-				Future<Object> future = Patterns.ask(as, new Command().setCommand("pushGradient()").setData(gradient),
+				Future<Object> future = Patterns.ask(as,
+						new Command().setCommand("pushGradient()").setData(nd4jSerialization.serialize(gradient)),
 						timeout);
 				INDArray param = (INDArray) Await.result(future, timeout.duration());
 				flattenedParams.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end)).assign(param);
@@ -300,6 +277,27 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void pullParam() {
+		int start, end;
+		int nParamServer = distInfo.getRouterInfo().getNParamServer();
+		RouterInfo routerInfo = distInfo.getRouterInfo();
+		for (int idx = 0; idx < nParamServer; idx++) {
+			ActorSelection as = routerInfo.getParamComms().get(idx);
+			RouterInfo.Range range = routerInfo.getParamRange().get(idx);
+			start = range.getStart();
+			end = range.getEnd();
+			try {
+				Future<Object> future = Patterns.ask(as, new Command().setCommand("pullParam()").setData(null),
+						timeout);
+				INDArray param = (INDArray) nd4jSerialization.deserialize((byte[])Await.result(future, timeout.duration()));
+				flattenedParams.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end)).assign(param);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 
 	}
+
 }

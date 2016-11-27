@@ -21,6 +21,12 @@ public class Nd4jSerialization {
 		this.nd4jSerializer = new Nd4jSerializer();
 	}
 	
+	public byte[] serialize(INDArray iNDArray){
+		Output output = new Output(iNDArray.length()*8);
+		nd4jSerializer.write(kryo, output, iNDArray);
+		return output.toBytes();
+	}
+	
 	public byte[] serialize(int bufferSize, INDArray iNDArray){
 		Output output = new Output(bufferSize);
 		nd4jSerializer.write(kryo, output, iNDArray);

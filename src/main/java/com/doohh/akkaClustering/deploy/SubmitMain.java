@@ -37,9 +37,9 @@ public class SubmitMain {
 		//args = new String[11];
 		args = new String[8];
 		args[0] = "-m";
-		args[1] = "1";
+		args[1] = "2";
 		args[2] = "-w";
-		args[3] = "2";
+		args[3] = "3";
 		args[4] = "-j";
 		// args[5] =
 		// "C:/git/akkaClustering/jars/TestPjt-0.0.1-SNAPSHOT-allinone.jar";

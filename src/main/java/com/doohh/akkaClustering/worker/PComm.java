@@ -29,50 +29,43 @@ public class PComm extends UntypedActor {
 	public PComm(int nParamServer, int idx) {
 		this.idx = idx;
 		this.nParamServer = nParamServer;
-		nd4jSerialization = new Nd4jSerialization();		
-		
-		// for loading ND4j lib
-		//this.param = Nd4j.zeros(1);
-		//System.out.println("load nd4jlib " + this.param);
-		//log.error("load nd4jlib {}", this.param);
+		nd4jSerialization = new Nd4jSerialization();	
 	}
 
 	@Override
 	public void onReceive(Object message) throws Throwable {
 		if (message instanceof Command) {
 			Command cmd = (Command) message;
-
+			INDArray recvINDArray = null;
+			if(cmd.getData() instanceof byte[]){
+				recvINDArray = (INDArray) nd4jSerialization.deserialize((byte[])cmd.getData());
+			}
+			
 			if (cmd.getCommand().equals("initParam()")) {
 				log.info("init PComm with parameters");
-				this.param = (INDArray) nd4jSerialization.deserialize((byte[])cmd.getData());
+				this.param = recvINDArray;
 				log.error("{}", this.param.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(0, 10)));
 				getSender().tell("setting", getSelf());
 			}
 
 			if (cmd.getCommand().equals("pushGradient()")) {
-				// ActorRef ar = getSender();
 				log.info("get gradient from slave: {}", getSender());
-				INDArray gradient = (INDArray) cmd.getData();
+				INDArray gradient = (INDArray) recvINDArray;
 				update(gradient);
 				getSender().tell(this.param, getSelf());
 				log.info("send parameter to slave: {}", getSender());
-			}
+			}			
 
+			if (cmd.getCommand().equals("pullParam()")) {
+				log.info("send parameters to slave from pcomm");
+				getSender().tell(nd4jSerialization.serialize(this.param), getSelf());
+			}
+			
+			
 			if (cmd.getCommand().equals("setParam()")) {
-				// System.out.println("setParam");
 				log.info("set PComm with parameters");
 				this.param = (INDArray) cmd.getData();
 				getSender().tell("setting", getSelf());
-			}
-
-			if (cmd.getCommand().equals("pullParam()")) {
-				// System.out.println("pullParam");
-				log.info("send parameters to slave from pcomm");
-				if (this.param != null)
-					getSender().tell(this.param, getSelf());
-				else
-					log.info("NULLLLLL");
-				// System.out.println("NULLLLLL");
 			}
 
 		}

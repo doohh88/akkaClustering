@@ -8,7 +8,7 @@ import java.net.URLClassLoader;
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.util.Util;
-import com.doohh.example.DistTest;
+import com.doohh.example.LenetDistEx;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
@@ -54,15 +54,15 @@ public class Task extends UntypedActor {
 				// runApp(appConf);
 				// new LoadTaskPropMain().main(null);
 				// new DistLenet().main(null);
-				// new LenetDistEx().main(appConf, null);
-				new DistTest().main(appConf, appConf.getArgs());
+				new LenetDistEx().main(appConf, appConf.getArgs());
+				//new DistTest().main(appConf, appConf.getArgs());
 				// new DistTest().main(appConf, new String[0]);
 				// new HashTableMain().main(null);
 				// new PushGradPullParam().main(null);
 				// *******************
 
 				/*log.info("send msg(complet task) to {}", getSender());
-				master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());*/
+				master.tell(new Command().setCommand("finishApp()").setData(appConf.getRouterInfo()), getSelf());*/				
 			}
 		}
 
