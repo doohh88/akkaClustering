@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.DistInfo;
 import com.doohh.akkaClustering.nn.DistMnistDataSetIterator;
-import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
+import com.doohh.akkaClustering.nn.SyncDistMultiLayerNetwork;
 import com.doohh.akkaClustering.worker.Controller;
 
-public class LenetDistEx {
-	private static final Logger log = LoggerFactory.getLogger(LenetDistEx.class);
+public class LenetSyncDistEx {
+	private static final Logger log = LoggerFactory.getLogger(LenetSyncDistEx.class);
 
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -115,7 +115,7 @@ public class LenetDistEx {
 					.setInputType(InputType.convolutionalFlat(28, 28, 1)).backprop(true).pretrain(false);
 
 			MultiLayerConfiguration conf = builder.build();
-			DistMultiLayerNetwork model = new DistMultiLayerNetwork(conf, distInfo);
+			SyncDistMultiLayerNetwork model = new SyncDistMultiLayerNetwork(conf, distInfo);
 			model.init();
 			model.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
 
@@ -149,7 +149,7 @@ public class LenetDistEx {
 	public static void main(AppConf appConf, String[] args) {
 		System.out.println("start...");
 		try {
-			new LenetDistEx().run(appConf, args);
+			new LenetSyncDistEx().run(appConf, args);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

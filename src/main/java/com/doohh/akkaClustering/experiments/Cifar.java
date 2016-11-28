@@ -1,4 +1,4 @@
-package com.doohh.example;
+package com.doohh.akkaClustering.experiments;
 
 import org.datavec.image.loader.CifarLoader;
 import org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator;
@@ -26,8 +26,8 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Cifar1 {
-private static final Logger log = LoggerFactory.getLogger(Cifar1.class);
+public class Cifar {
+private static final Logger log = LoggerFactory.getLogger(Cifar.class);
 	
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -138,7 +138,7 @@ private static final Logger log = LoggerFactory.getLogger(Cifar1.class);
 	
 	public static void main(String[] args) { 
 		System.out.println("start...");
-		new Cifar1().run(args);	
+		new Cifar().run(args);	
 		System.out.println("finish...");
 	}
 }

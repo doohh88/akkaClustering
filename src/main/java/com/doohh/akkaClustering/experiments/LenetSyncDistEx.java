@@ -1,4 +1,4 @@
-package com.doohh.example;
+package com.doohh.akkaClustering.experiments;
 
 import java.io.IOException;
 
@@ -13,14 +13,14 @@ import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.DataSet;
+import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -29,17 +29,20 @@ import org.slf4j.LoggerFactory;
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.DistInfo;
 import com.doohh.akkaClustering.nn.DistMnistDataSetIterator;
-import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
+import com.doohh.akkaClustering.nn.SyncDistMultiLayerNetwork;
+import com.doohh.akkaClustering.worker.Controller;
 
-public class DistTest {
-	private static final Logger log = LoggerFactory.getLogger(DistTest.class);
+public class LenetSyncDistEx {
+	private static final Logger log = LoggerFactory.getLogger(LenetSyncDistEx.class);
 
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
-	int batchSize = 64;
+	int batchSize = 128;
 	@Option(name = "--nEpochs", usage = "nEpochs", aliases = "-e")
 	int nEpochs = 1;
 	@Option(name = "--iterations", usage = "iterations", aliases = "-i")
 	int iterations = 1;
+	@Option(name = "--listenerFreq", usage = "listenerFreq", aliases = "-l")
+	int listenerFreq = 1;
 	private AppConf appConf;
 
 	private void parseArgs(String[] args) {
@@ -112,15 +115,14 @@ public class DistTest {
 					.setInputType(InputType.convolutionalFlat(28, 28, 1)).backprop(true).pretrain(false);
 
 			MultiLayerConfiguration conf = builder.build();
-			MultiLayerNetwork model = new DistMultiLayerNetwork(conf, distInfo);
+			SyncDistMultiLayerNetwork model = new SyncDistMultiLayerNetwork(conf, distInfo);
 			model.init();
-			model.setListeners(new ScoreIterationListener(1));
+			model.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
 
 			log.error("Train model....");
 			long startTime = System.currentTimeMillis();
 			for (int i = 0; i < nEpochs; i++) {
 				model.fit(mnistTrain);
-				mnistTrain.reset();
 				log.error("*** Completed epoch {} ***", i);
 			}
 			long endTime = System.currentTimeMillis();
@@ -128,7 +130,7 @@ public class DistTest {
 
 			if (distInfo.getRoleIdx() == 0) {
 				log.error("Evaluate model....");
-				Evaluation eval = new Evaluation(outputNum);
+				Evaluation eval = new Evaluation();
 				while (mnistTest.hasNext()) {
 					DataSet ds = mnistTest.next();
 					INDArray output = model.output(ds.getFeatureMatrix(), false);
@@ -136,14 +138,18 @@ public class DistTest {
 				}
 				log.error(eval.stats());
 				log.error("****************Example finished********************");
+				model.finishApp(appConf);
 			}
+			Controller.barrier(distInfo, "slave");
+			if (distInfo.getRoleIdx() == 0)
+				model.finishApp(appConf);
 		}
 	}
 
 	public static void main(AppConf appConf, String[] args) {
 		System.out.println("start...");
 		try {
-			new DistTest().run(appConf, args);
+			new LenetSyncDistEx().run(appConf, args);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

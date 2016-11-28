@@ -7,11 +7,12 @@ import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
+import org.deeplearning4j.nn.conf.preprocessor.CnnToFeedForwardPreProcessor;
+import org.deeplearning4j.nn.conf.preprocessor.FeedForwardToCnnPreProcessor;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
@@ -26,8 +27,8 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Cifar1 {
-private static final Logger log = LoggerFactory.getLogger(Cifar1.class);
+public class Cifar9 {
+private static final Logger log = LoggerFactory.getLogger(Cifar9.class);
 	
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -72,50 +73,50 @@ private static final Logger log = LoggerFactory.getLogger(Cifar1.class);
 
         
         //setup the network
-        MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder() 
-        		.seed(seed)
+	    MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
+//                .seed(seed)
+//                .iterations(iterations).regularization(true)
+//                .l1(1e-1).l2(2e-4).useDropConnect(true)
+//                .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // TODO confirm this is required
+//                .miniBatch(true)
+//                .optimizationAlgo(OptimizationAlgorithm.CONJUGATE_GRADIENT)
+//                .list(6)
+				.seed(seed)
 				.iterations(iterations)
 				.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
-				.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT) 
-                .list() 
+				.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+				.list()
                 .layer(0, new ConvolutionLayer.Builder(5, 5)
-                		.nIn(3)
-                		.nOut(20)
-                		.stride(1, 1)
-                        .weightInit(WeightInit.XAVIER) 
-                        .activation("relu") 
-                        .build()) 
-                .layer(1, new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
-                		.kernelSize(2, 2)
-                		.stride(2, 2)
-						.build()) 
-                .layer(2, new ConvolutionLayer.Builder(5, 5)
-                		.nOut(50)
-                		.stride(1, 1)
+                        .nOut(5).dropOut(0.5)
+                        .stride(2, 2)
                         .weightInit(WeightInit.XAVIER)
-                        .activation("relu") 
-                        .build()) 
-                .layer(3, new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
-                		.kernelSize(2, 2)
-                		.stride(2, 2)
-						.build())
-                .layer(4, new DenseLayer.Builder().activation("relu")
-                        .nOut(384).build())
-                .layer(5, new DenseLayer.Builder().activation("relu")
-                        .nOut(192).build())                
-                .layer(6, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD) 
-                        .nOut(10) 
-                        .weightInit(WeightInit.XAVIER) 
-                        .activation("softmax") 
-                        .build()) 
-                .setInputType(InputType.convolutionalFlat(32, 32, 3))
-                .backprop(true).pretrain(false); 
- 
-
-        MultiLayerConfiguration conf = builder.build();
-        
-        MultiLayerNetwork network = new MultiLayerNetwork(conf);
+                        .activation("relu")
+                        .build())
+                .layer(1, new SubsamplingLayer
+                        .Builder(SubsamplingLayer.PoolingType.MAX, new int[]{2, 2})
+                        .build())
+                .layer(2, new ConvolutionLayer.Builder(3, 3)
+                        .nOut(10).dropOut(0.5)
+                        .stride(2, 2)
+                        .weightInit(WeightInit.XAVIER)
+                        .activation("relu")
+                        .build())
+                .layer(3, new SubsamplingLayer
+                        .Builder(SubsamplingLayer.PoolingType.MAX, new int[]{2, 2})
+                        .build())
+                .layer(4, new DenseLayer.Builder().nOut(100).activation("relu")
+                        .build())
+                .layer(5, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nOut(outputNum)
+                        .weightInit(WeightInit.XAVIER)
+                        .activation("softmax")
+                        .build())
+                .backprop(true).pretrain(false);
+	    
+        MultiLayerNetwork network = new MultiLayerNetwork(builder.build());
         network.init();
+        
+        nEpochs = 1;
         
         log.error("Train model....");
         network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
@@ -138,7 +139,7 @@ private static final Logger log = LoggerFactory.getLogger(Cifar1.class);
 	
 	public static void main(String[] args) { 
 		System.out.println("start...");
-		new Cifar1().run(args);	
+		new Cifar9().run(args);	
 		System.out.println("finish...");
 	}
 }

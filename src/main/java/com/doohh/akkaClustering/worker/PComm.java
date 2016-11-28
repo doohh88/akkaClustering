@@ -39,12 +39,19 @@ public class PComm extends UntypedActor {
 				getSender().tell("setting", getSelf());
 			}
 
-			if (cmd.getCommand().equals("pushGradient()")) {
+			if (cmd.getCommand().equals("pushGradPullParam()")) {
 				log.info("get gradient from slave: {}", getSender());
 				INDArray gradient = (INDArray) recvINDArray;
 				update(gradient);
 				getSender().tell(this.param, getSelf());
 				log.info("send parameter to slave: {}", getSender());
+			}
+			
+			if (cmd.getCommand().equals("pushGradient()")) {
+				log.info("get gradient from slave: {}", getSender());
+				INDArray gradient = (INDArray) recvINDArray;
+				update(gradient);
+				getSender().tell("completePush", getSelf());				
 			}
 
 			if (cmd.getCommand().equals("pullParam()")) {

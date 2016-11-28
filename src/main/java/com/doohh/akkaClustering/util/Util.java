@@ -92,4 +92,15 @@ public class Util {
 		File[] fileList = dirFile.listFiles();
 		return fileList;
 	}
+	
+	public static void load(String name) {
+		try {
+			log.error("Trying to load: {}", name);
+			System.loadLibrary(name);
+		} catch (Throwable e) {
+			log.error("Failed: {}", e.getMessage());
+			return;
+		}
+		log.error("success");
+	}
 }

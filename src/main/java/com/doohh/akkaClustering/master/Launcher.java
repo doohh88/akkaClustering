@@ -80,6 +80,7 @@ public class Launcher extends UntypedActor {
 
 			if (cmd.getCommand().equals("finishApp()")) {
 				log.info("finishApp");
+				log.error("appConf:{}", (AppConf) cmd.getData());
 				RouterInfo routerInfo = ((AppConf) cmd.getData()).getRouterInfo();
 				ActorRef router = routerInfo.getRouter();
 				router.tell(new Broadcast(new Command().setCommand("stopTask()").setData(null)), getSelf());

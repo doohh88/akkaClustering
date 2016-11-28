@@ -12,6 +12,7 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -95,7 +96,7 @@ private static final Logger log = LoggerFactory.getLogger(Cifar2.class);
         network.init();
         
         log.error("Train model....");
-        network.setListeners(new ScoreIterationListener(listenerFreq));
+        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
         for( int i=0; i<nEpochs; i++ ) {
         	network.fit(train);
             log.error("*** Completed epoch {} ***", i); 

@@ -15,5 +15,5 @@ fi
 #echo "DISTDEEP_HOST = $DISTDEEP_HOST"
 
 CLASS="com.doohh.akkaClustering.worker.WorkerMain"
-java -cp $DISTDEEP_HOME/jars/distDeep-core.jar $CLASS -h $DISTDEEP_HOST &
+java -cp $DISTDEEP_HOME/jars/akkaClustering-0.0.1-allinone.jar $CLASS -h $DISTDEEP_HOST
 echo $!> worker.pid

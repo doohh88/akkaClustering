@@ -1,4 +1,4 @@
-package com.doohh.example;
+package com.doohh.akkaClustering.experiments;
 
 import java.io.IOException;
 

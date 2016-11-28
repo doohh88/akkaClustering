@@ -1,4 +1,4 @@
-package com.doohh.example;
+package com.doohh.akkaClustering.experiments;
 
 import java.io.IOException;
 
@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by agibsonccc on 9/16/15.
  */
-public class LenetMnistExample {
-	private static final Logger log = LoggerFactory.getLogger(LenetMnistExample.class);
+public class LenetMnist {
+	private static final Logger log = LoggerFactory.getLogger(LenetMnist.class);
 
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -118,7 +118,7 @@ public class LenetMnistExample {
 	public static void main(String[] args) {
 		System.out.println("start...");
 		try {
-			new LenetMnistExample().run(args);
+			new LenetMnist().run(args);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -44,7 +44,7 @@ import scala.concurrent.Await;
 import scala.concurrent.Future;
 
 @Data
-public class DistMultiLayerNetwork extends MultiLayerNetwork {
+public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 	private static final Logger log = LoggerFactory.getLogger(DistMultiLayerNetwork.class);
 
 	private String role;
@@ -53,7 +53,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 	private Timeout timeout = new Timeout(scala.concurrent.duration.Duration.create(10, "minutes"));
 	private Nd4jSerialization nd4jSerialization;
 
-	public DistMultiLayerNetwork(MultiLayerConfiguration conf, DistInfo distInfo2) {
+	public SyncDistMultiLayerNetwork(MultiLayerConfiguration conf, DistInfo distInfo2) {
 		super(conf);
 		this.distInfo = distInfo2;
 		this.role = distInfo.getRole();
@@ -176,8 +176,10 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			update(TaskUtils.buildTask(iter));
 			iter.reset();
 
-			// pullParam();
 			while (iter.hasNext()) {
+				pullParam();
+				Controller.barrier(distInfo, "slave");
+				
 				DataSet next = iter.next();
 				if (next.getFeatureMatrix() == null || next.getLabels() == null)
 					break;
@@ -206,8 +208,9 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 					clearLayerMaskArrays();
 
 				// push & pull parameters from master
-				pushGradPullParam();
-			}
+				pushGrad();
+				Controller.barrier(distInfo, "slave");
+				}
 		}
 		pullParam();
 	}
@@ -271,28 +274,6 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		}
 	}
 
-	private void pushGrad() {
-		INDArray gradient;
-		int start, end;
-		int nParamServer = distInfo.getRouterInfo().getNParamServer();
-		RouterInfo routerInfo = distInfo.getRouterInfo();
-		for (int idx = 0; idx < nParamServer; idx++) {
-			ActorSelection as = routerInfo.getParamComms().get(idx);
-			try {
-				RouterInfo.Range range = routerInfo.getParamRange().get(idx);
-				start = range.getStart();
-				end = range.getEnd();
-				gradient = this.flattenedGradients.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end));
-				Future<Object> future = Patterns.ask(as,
-						new Command().setCommand("pushGradient()").setData(nd4jSerialization.serialize(gradient)),
-						timeout);
-				Await.result(future, timeout.duration());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
 	private void pullParam() {
 		int start, end;
 		int nParamServer = distInfo.getRouterInfo().getNParamServer();
@@ -313,6 +294,28 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			}
 		}
 
+	}
+	
+	private void pushGrad() {
+		INDArray gradient;
+		int start, end;
+		int nParamServer = distInfo.getRouterInfo().getNParamServer();
+		RouterInfo routerInfo = distInfo.getRouterInfo();
+		for (int idx = 0; idx < nParamServer; idx++) {
+			ActorSelection as = routerInfo.getParamComms().get(idx);
+			try {
+				RouterInfo.Range range = routerInfo.getParamRange().get(idx);
+				start = range.getStart();
+				end = range.getEnd();
+				gradient = this.flattenedGradients.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end));
+				Future<Object> future = Patterns.ask(as,
+						new Command().setCommand("pushGradient()").setData(nd4jSerialization.serialize(gradient)),
+						timeout);
+				Await.result(future, timeout.duration());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public void finishApp(AppConf appConf){
