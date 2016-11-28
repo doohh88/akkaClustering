@@ -159,7 +159,8 @@ public class LenetMnistExample {
 		log.error("time: {}", endTime - startTime);
 
 		log.error("Evaluate model....");
-		Evaluation eval = new Evaluation(outputNum);
+		//Evaluation eval = new Evaluation(outputNum);
+		Evaluation eval = new Evaluation();
 		mnistTest.reset();
 		while (mnistTest.hasNext()) {
 			DataSet ds = mnistTest.next();

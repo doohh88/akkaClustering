@@ -80,14 +80,17 @@ public class Launcher extends UntypedActor {
 
 			if (cmd.getCommand().equals("finishApp()")) {
 				log.info("finishApp");
-				RouterInfo routerInfo = (RouterInfo) cmd.getData();
+				RouterInfo routerInfo = ((AppConf) cmd.getData()).getRouterInfo();
 				ActorRef router = routerInfo.getRouter();
-				routerTable.put(router, routerTable.get(router) + 1);
-				if (routerTable.get(router) == routerInfo.getNNodes()) {
-					// stop all task;
-					router.tell(new Broadcast(new Command().setCommand("stopTask()").setData(null)), getSelf());
-					context().stop(router);
-				}
+				router.tell(new Broadcast(new Command().setCommand("stopTask()").setData(null)), getSelf());
+				context().stop(router);
+				
+//				routerTable.put(router, routerTable.get(router) + 1);
+//				if (routerTable.get(router) == routerInfo.getNNodes()) {
+//					// stop all task;
+//					router.tell(new Broadcast(new Command().setCommand("stopTask()").setData(null)), getSelf());
+//					context().stop(router);
+//				}
 			}
 
 		}

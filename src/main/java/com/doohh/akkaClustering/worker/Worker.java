@@ -64,20 +64,25 @@ public class Worker extends UntypedActor {
 				log.info("get appConf from master : {}", appConf);
 				getSender().tell("receive appConf from launcher", getSelf());
 
-				if(appConf.getRole().equals("param") && appConf.getRoleIdx() == 0){
+				if (appConf.getRole().equals("param") && appConf.getRoleIdx() == 0) {
 					log.info("generate contoller for managing app");
-					this.controller = context().actorOf(Props.create(Controller.class), "controller");					
-				}				
-				
+					this.controller = context().actorOf(Props.create(Controller.class), "controller");
+				}
+
 				log.info("generate task for proc");
 				task = context().actorOf(Props.create(Task.class), "task");
 				task.tell(new Command().setCommand("runApp()").setData(appConf), getSender());
-				
-				
+
 			}
+
 			if (cmd.getCommand().equals("stopTask()")) {
 				log.info("stopTask()");
 				context().stop(task);
+				if (this.controller != null) {
+					log.info("stopController()");
+					context().stop(this.controller);
+				}
+
 				this.master.tell(new Command().setCommand("returnResource()").setData(null), getSelf());
 			}
 		}

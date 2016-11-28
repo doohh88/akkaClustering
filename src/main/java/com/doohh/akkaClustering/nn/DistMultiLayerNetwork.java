@@ -28,12 +28,14 @@ import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.Command;
 import com.doohh.akkaClustering.dto.DistInfo;
 import com.doohh.akkaClustering.dto.RouterInfo;
 import com.doohh.akkaClustering.util.Nd4jSerialization;
 import com.doohh.akkaClustering.worker.Controller;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
@@ -137,16 +139,6 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		distInfo.setParamRange(this.numParams());
 		initParamServers(flattenedParams);
 		Controller.barrier(distInfo, "slave");
-
-		// System.out.println(Controller.getCurrentMethodName());
-
-		// System.out.println("before barrier " + this.role +
-		// this.distInfo.getRoleIdx());
-		// Controller.barrier(distInfo, "slave",
-		// Controller.getCurrentMethodName());
-		// Controller.barrier(distInfo, "slave");
-		// System.out.println("after barrier " + this.role +
-		// this.distInfo.getRoleIdx());
 	}
 
 	private void initMask() {
@@ -291,13 +283,19 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 			try {
 				Future<Object> future = Patterns.ask(as, new Command().setCommand("pullParam()").setData(null),
 						timeout);
-				INDArray param = (INDArray) nd4jSerialization.deserialize((byte[])Await.result(future, timeout.duration()));
+				INDArray param = (INDArray) nd4jSerialization
+						.deserialize((byte[]) Await.result(future, timeout.duration()));
 				flattenedParams.get(NDArrayIndex.interval(0, 1), NDArrayIndex.interval(start, end)).assign(param);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 
+	}
+	
+	public void finishApp(AppConf appConf){
+		ActorSelection controller = distInfo.getController();
+		controller.tell(new Command().setCommand("finishApp()").setData(appConf), ActorRef.noSender());
 	}
 
 }

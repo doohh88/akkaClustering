@@ -14,8 +14,6 @@ import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
 import org.deeplearning4j.nn.conf.layers.setup.ConvolutionLayerSetup;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.listeners.CollectScoresIterationListener;
-import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -27,19 +25,21 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CifarCompleteEx {
-	private static final Logger log = LoggerFactory.getLogger(CifarCompleteEx.class);
+public class Cifar3 {
+private static final Logger log = LoggerFactory.getLogger(Cifar3.class);
 	
-	@Option(name="--batchSize",usage="batchSize",aliases = "-b")
-    int batchSize = 128;
-    @Option(name="--nEpochs",usage="nEpochs",aliases = "-e")
-    int nEpochs = 1;
-    @Option(name="--iterations",usage="iterations",aliases = "-i")
-    int iterations = 10;
-    @Option(name="--numTrain",usage="numTrain",aliases = "-tr")
-    int numTrain = CifarLoader.NUM_TRAIN_IMAGES;
-    @Option(name="--numTest",usage="numTest",aliases = "-te")
-    int numTest = CifarLoader.NUM_TEST_IMAGES;
+	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
+	int batchSize = 128;
+	@Option(name = "--nEpochs", usage = "nEpochs", aliases = "-e")
+	int nEpochs = 1;
+	@Option(name = "--iterations", usage = "iterations", aliases = "-i")
+	int iterations = 1;
+	@Option(name = "--listenerFreq", usage = "listenerFreq", aliases = "-l")
+	int listenerFreq = 1;
+	@Option(name = "--numTrain", usage = "numTrain", aliases = "-tr")
+	int numTrain = CifarLoader.NUM_TRAIN_IMAGES;
+	@Option(name = "--numTest", usage = "numTest", aliases = "-te")
+	int numTest = CifarLoader.NUM_TEST_IMAGES;
 
     
 	private void parseArgs(String[] args) {
@@ -63,10 +63,8 @@ public class CifarCompleteEx {
 		
 		int nChannels = 3;
 	    int outputNum = 10;
-	    //int iterations = 10;
 	    int splitTrainNum = (int) (batchSize*.8);
 	    int seed = 123;
-	    int listenerFreq = iterations/5;
 		
         DataSetIterator train = new CifarDataSetIterator(batchSize, numTrain, true);
         DataSetIterator test = new CifarDataSetIterator(batchSize, numTest, false);
@@ -79,8 +77,6 @@ public class CifarCompleteEx {
                 .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // TODO confirm this is required
                 .miniBatch(true)
                 .optimizationAlgo(OptimizationAlgorithm.CONJUGATE_GRADIENT)
-                //.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                //.list(6)
                 .list()
                 .layer(0, new ConvolutionLayer.Builder(5, 5)
                         .nOut(5).dropOut(0.5)
@@ -112,19 +108,17 @@ public class CifarCompleteEx {
         new ConvolutionLayerSetup(builder,32,32,nChannels);
         MultiLayerConfiguration conf = builder.build();
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
-        network.init();
 
-        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq), new CollectScoresIterationListener());
-        
+        network.setListeners(new ScoreIterationListener(listenerFreq));
         
         log.error("Train model....");
-        network.setListeners(new ScoreIterationListener(10));
+        network.setListeners(new ScoreIterationListener(listenerFreq));
         for( int i=0; i<nEpochs; i++ ) {
         	network.fit(train);
             log.error("*** Completed epoch {} ***", i); 
 
             log.error("Evaluate model....");
-            Evaluation eval = new Evaluation(outputNum);
+            Evaluation eval = new Evaluation();
             test.reset();
             while(test.hasNext()){
                 DataSet ds = test.next();
@@ -138,8 +132,7 @@ public class CifarCompleteEx {
 	
 	public static void main(String[] args) { 
 		System.out.println("start...");
-		new CifarCompleteEx().run(args);	
+		new Cifar3().run(args);	
 		System.out.println("finish...");
 	}
 }
-

@@ -3,7 +3,6 @@ package com.doohh.example;
 import java.io.IOException;
 
 import org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator;
-import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -13,14 +12,11 @@ import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -30,6 +26,7 @@ import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.DistInfo;
 import com.doohh.akkaClustering.nn.DistMnistDataSetIterator;
 import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
+import com.doohh.akkaClustering.worker.Controller;
 
 public class LenetDistEx {
 	private static final Logger log = LoggerFactory.getLogger(LenetDistEx.class);
@@ -112,31 +109,35 @@ public class LenetDistEx {
 					.setInputType(InputType.convolutionalFlat(28, 28, 1)).backprop(true).pretrain(false);
 
 			MultiLayerConfiguration conf = builder.build();
-			MultiLayerNetwork model = new DistMultiLayerNetwork(conf, distInfo);
+			DistMultiLayerNetwork model = new DistMultiLayerNetwork(conf, distInfo);
 			model.init();
 			model.setListeners(new ScoreIterationListener(1));
 
-			log.error("Train model....");
-			long startTime = System.currentTimeMillis();
-			for (int i = 0; i < nEpochs; i++) {
-				model.fit(mnistTrain);
-				mnistTrain.reset();
-				log.error("*** Completed epoch {} ***", i);
-			}
-			long endTime = System.currentTimeMillis();
-			log.error("time: {}", endTime - startTime);
-
-			if (distInfo.getRoleIdx() == 0) {
-				log.error("Evaluate model....");
-				Evaluation eval = new Evaluation(outputNum);
-				while (mnistTest.hasNext()) {
-					DataSet ds = mnistTest.next();
-					INDArray output = model.output(ds.getFeatureMatrix(), false);
-					eval.eval(ds.getLabels(), output);
-				}
-				log.error(eval.stats());
-				log.error("****************Example finished********************");
-			}
+//			log.error("Train model....");
+//			long startTime = System.currentTimeMillis();
+//			for (int i = 0; i < nEpochs; i++) {
+//				model.fit(mnistTrain);
+//				mnistTrain.reset();
+//				log.error("*** Completed epoch {} ***", i);
+//			}
+//			long endTime = System.currentTimeMillis();
+//			log.error("time: {}", endTime - startTime);
+//
+//			if (distInfo.getRoleIdx() == 0) {
+//				log.error("Evaluate model....");
+//				Evaluation eval = new Evaluation(outputNum);
+//				while (mnistTest.hasNext()) {
+//					DataSet ds = mnistTest.next();
+//					INDArray output = model.output(ds.getFeatureMatrix(), false);
+//					eval.eval(ds.getLabels(), output);
+//				}
+//				log.error(eval.stats());
+//				log.error("****************Example finished********************");
+//				model.finishApp(appConf);
+//			}
+			Controller.barrier(distInfo, "slave");
+			if (distInfo.getRoleIdx() == 0)
+				model.finishApp(appConf);
 		}
 	}
 

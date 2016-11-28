@@ -39,14 +39,9 @@ public class RouterInfo implements Serializable {
 		this.nParamServer = paramAddr.size();
 		this.nProcServer = slaveAddr.size();
 		paramComms = new ArrayList<ActorSelection>();
-		slaveComms = new ArrayList<ActorSelection>();
 		int idx = 0;
 		for (String addr : paramAddr) {
 			paramComms.add(WorkerMain.actorSystem.actorSelection(addr + "/task/pcomm" + idx++));
-		}
-		idx = 0;
-		for (String addr : slaveAddr) {
-			slaveComms.add(WorkerMain.actorSystem.actorSelection(addr + "/task/scomm" + idx++));
 		}
 	}
 

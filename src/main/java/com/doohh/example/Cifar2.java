@@ -8,14 +8,10 @@ import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
-import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
-import org.deeplearning4j.nn.conf.layers.setup.ConvolutionLayerSetup;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.listeners.CollectScoresIterationListener;
-import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -27,15 +23,17 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CifarCompleteEx {
-	private static final Logger log = LoggerFactory.getLogger(CifarCompleteEx.class);
+public class Cifar2 {
+private static final Logger log = LoggerFactory.getLogger(Cifar2.class);
 	
 	@Option(name="--batchSize",usage="batchSize",aliases = "-b")
     int batchSize = 128;
     @Option(name="--nEpochs",usage="nEpochs",aliases = "-e")
     int nEpochs = 1;
     @Option(name="--iterations",usage="iterations",aliases = "-i")
-    int iterations = 10;
+    int iterations = 1;
+    @Option(name="--listenerFreq",usage="listenerFreq",aliases = "-l")
+    int listenerFreq  = 1;
     @Option(name="--numTrain",usage="numTrain",aliases = "-tr")
     int numTrain = CifarLoader.NUM_TRAIN_IMAGES;
     @Option(name="--numTest",usage="numTest",aliases = "-te")
@@ -63,68 +61,47 @@ public class CifarCompleteEx {
 		
 		int nChannels = 3;
 	    int outputNum = 10;
-	    //int iterations = 10;
 	    int splitTrainNum = (int) (batchSize*.8);
 	    int seed = 123;
-	    int listenerFreq = iterations/5;
 		
-        DataSetIterator train = new CifarDataSetIterator(batchSize, numTrain, true);
-        DataSetIterator test = new CifarDataSetIterator(batchSize, numTest, false);
-               
-        //setup the network
+	    DataSetIterator train = new CifarDataSetIterator(batchSize, numTrain, true);
+	    DataSetIterator test = new CifarDataSetIterator(batchSize, numTest, false);
+	    
+	    
+	    //setup the network
         MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
-                .seed(seed)
-                .iterations(iterations).regularization(true)
-                .l1(1e-1).l2(2e-4).useDropConnect(true)
-                .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // TODO confirm this is required
-                .miniBatch(true)
-                .optimizationAlgo(OptimizationAlgorithm.CONJUGATE_GRADIENT)
-                //.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                //.list(6)
-                .list()
-                .layer(0, new ConvolutionLayer.Builder(5, 5)
-                        .nOut(5).dropOut(0.5)
-                        .stride(2, 2)
-                        .weightInit(WeightInit.XAVIER)
-                        .activation("relu")
-                        .build())
-                .layer(1, new SubsamplingLayer
-                        .Builder(SubsamplingLayer.PoolingType.MAX, new int[]{2, 2})
-                        .build())
-                .layer(2, new ConvolutionLayer.Builder(3, 3)
-                        .nOut(10).dropOut(0.5)
-                        .stride(2, 2)
-                        .weightInit(WeightInit.XAVIER)
-                        .activation("relu")
-                        .build())
-                .layer(3, new SubsamplingLayer
-                        .Builder(SubsamplingLayer.PoolingType.MAX, new int[]{2, 2})
-                        .build())
-                .layer(4, new DenseLayer.Builder().nOut(100).activation("relu")
-                        .build())
-                .layer(5, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nOut(outputNum)
-                        .weightInit(WeightInit.XAVIER)
-                        .activation("softmax")
-                        .build())
-                .backprop(true).pretrain(false);
+				.seed(seed)
+				.iterations(iterations)
+				.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
+				.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+				.list()
+				.layer(0, new ConvolutionLayer.Builder(5, 5)
+						.nIn(3)
+						.nOut(6)
+						.weightInit(WeightInit.XAVIER)
+						.activation("relu")
+						.build())
+				.layer(1, new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX, new int[] {2,2})
+						.build())
+				.layer(2, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+						.nOut(outputNum)
+						.weightInit(WeightInit.XAVIER)
+						.activation("softmax")
+						.build())
+				.backprop(true).pretrain(false)
+				.cnnInputSize(32, 32, 3);
 
-        new ConvolutionLayerSetup(builder,32,32,nChannels);
-        MultiLayerConfiguration conf = builder.build();
-        MultiLayerNetwork network = new MultiLayerNetwork(conf);
+		MultiLayerNetwork network = new MultiLayerNetwork(builder.build());
         network.init();
-
-        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq), new CollectScoresIterationListener());
-        
         
         log.error("Train model....");
-        network.setListeners(new ScoreIterationListener(10));
+        network.setListeners(new ScoreIterationListener(listenerFreq));
         for( int i=0; i<nEpochs; i++ ) {
         	network.fit(train);
             log.error("*** Completed epoch {} ***", i); 
 
             log.error("Evaluate model....");
-            Evaluation eval = new Evaluation(outputNum);
+            Evaluation eval = new Evaluation();
             test.reset();
             while(test.hasNext()){
                 DataSet ds = test.next();
@@ -138,8 +115,7 @@ public class CifarCompleteEx {
 	
 	public static void main(String[] args) { 
 		System.out.println("start...");
-		new CifarCompleteEx().run(args);	
+		new Cifar2().run(args);	
 		System.out.println("finish...");
 	}
 }
-

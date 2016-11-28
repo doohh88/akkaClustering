@@ -117,7 +117,7 @@ private static final Logger log = LoggerFactory.getLogger(CifarSGD.class);
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();
         network.setListeners(new ScoreIterationListener(listenerFreq));
-        log.error("hello");
+        
 		for (int i = 0; i < nEpochs; i++) {
 			network.fit(train);
 			
@@ -125,7 +125,6 @@ private static final Logger log = LoggerFactory.getLogger(CifarSGD.class);
 			test.reset();
 			while (test.hasNext()) {
 				DataSet testSet = test.next();
-				// log.info("{}", testSet.get(0));
 				INDArray output = network.output(testSet.getFeatureMatrix(), false);
 				eval.eval(testSet.getLabels(), output);
 			}
@@ -133,5 +132,5 @@ private static final Logger log = LoggerFactory.getLogger(CifarSGD.class);
 		}
 	}
 	
-	public static void main(String[] args) { new CifarCompleteEx().run(args);	}
+	public static void main(String[] args) { new CifarSGD().run(args);	}
 }

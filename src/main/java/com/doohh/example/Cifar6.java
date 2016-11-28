@@ -1,5 +1,8 @@
 package com.doohh.example;
 
+import java.io.File;
+import java.util.Arrays;
+
 import org.datavec.image.loader.CifarLoader;
 import org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
@@ -14,63 +17,38 @@ import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
 import org.deeplearning4j.nn.conf.layers.setup.ConvolutionLayerSetup;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.listeners.CollectScoresIterationListener;
-import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CifarCompleteEx {
-	private static final Logger log = LoggerFactory.getLogger(CifarCompleteEx.class);
-	
-	@Option(name="--batchSize",usage="batchSize",aliases = "-b")
-    int batchSize = 128;
-    @Option(name="--nEpochs",usage="nEpochs",aliases = "-e")
-    int nEpochs = 1;
-    @Option(name="--iterations",usage="iterations",aliases = "-i")
-    int iterations = 10;
-    @Option(name="--numTrain",usage="numTrain",aliases = "-tr")
-    int numTrain = CifarLoader.NUM_TRAIN_IMAGES;
-    @Option(name="--numTest",usage="numTest",aliases = "-te")
-    int numTest = CifarLoader.NUM_TEST_IMAGES;
+public class Cifar6 {
+	private static final Logger log = LoggerFactory.getLogger(Cifar6.class);
 
-    
-	private void parseArgs(String[] args) {
-		CmdLineParser parser = new CmdLineParser(this);
-        try {
-            parser.parseArgument(args);
-            log.error("batchSize : {}", batchSize);
-            log.error("nEpochs: {}", nEpochs);
-            log.error("iterations: {}", iterations);
-        } catch (CmdLineException e) {
-            // handling of wrong arguments
-        	log.error(e.getMessage());
-            parser.printUsage(System.err);
-        }
-
-	}
-	
-	void run(String[] args) {
-		// TODO Auto-generated method stub
-		this.parseArgs(args);
+	public static void main(String[] args) {
+        //DataSet dataSet = new DataSet();
+        // dataSet.load(new File("/home/agibsonccc/Downloads/cifar-train.bin"));
+        //dataSet.load(new File("cifar-small.bin"));
+        //System.out.println(Arrays.toString(dataSet.getFeatureMatrix().shape()));
 		
-		int nChannels = 3;
-	    int outputNum = 10;
-	    //int iterations = 10;
-	    int splitTrainNum = (int) (batchSize*.8);
-	    int seed = 123;
-	    int listenerFreq = iterations/5;
-		
-        DataSetIterator train = new CifarDataSetIterator(batchSize, numTrain, true);
-        DataSetIterator test = new CifarDataSetIterator(batchSize, numTest, false);
-               
+        int nChannels = 3;
+        int outputNum = 10;
+        int numSamples = 2000;
+        int batchSize = 500;
+        int iterations = 10;
+        int splitTrainNum = (int) (batchSize*.8);
+        int seed = 123;
+        int listenerFreq = iterations/5;
+        int nEpochs = 10;
+        
+//	    CifarDataSetIterator train = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TRAIN_IMAGES, true);
+//	    CifarDataSetIterator test = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TEST_IMAGES, false);
+        
+	    CifarDataSetIterator train = new CifarDataSetIterator(batchSize, numSamples, true);
+	    CifarDataSetIterator test = new CifarDataSetIterator(batchSize, numSamples, false);
+	    
         //setup the network
         MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder()
                 .seed(seed)
@@ -79,8 +57,6 @@ public class CifarCompleteEx {
                 .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // TODO confirm this is required
                 .miniBatch(true)
                 .optimizationAlgo(OptimizationAlgorithm.CONJUGATE_GRADIENT)
-                //.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                //.list(6)
                 .list()
                 .layer(0, new ConvolutionLayer.Builder(5, 5)
                         .nOut(5).dropOut(0.5)
@@ -112,19 +88,16 @@ public class CifarCompleteEx {
         new ConvolutionLayerSetup(builder,32,32,nChannels);
         MultiLayerConfiguration conf = builder.build();
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
-        network.init();
-
-        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq), new CollectScoresIterationListener());
-        
+        //network.fit(dataSet);
         
         log.error("Train model....");
-        network.setListeners(new ScoreIterationListener(10));
+        network.setListeners(new ScoreIterationListener(listenerFreq));
         for( int i=0; i<nEpochs; i++ ) {
         	network.fit(train);
             log.error("*** Completed epoch {} ***", i); 
 
             log.error("Evaluate model....");
-            Evaluation eval = new Evaluation(outputNum);
+            Evaluation eval = new Evaluation();
             test.reset();
             while(test.hasNext()){
                 DataSet ds = test.next();
@@ -134,12 +107,6 @@ public class CifarCompleteEx {
             log.error(eval.stats());
         }
         log.error("****************Example finished********************");
-	}
-	
-	public static void main(String[] args) { 
-		System.out.println("start...");
-		new CifarCompleteEx().run(args);	
-		System.out.println("finish...");
-	}
-}
 
+    }
+}
