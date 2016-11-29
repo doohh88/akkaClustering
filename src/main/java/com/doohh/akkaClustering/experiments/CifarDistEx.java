@@ -123,11 +123,14 @@ public class CifarDistEx {
 				network.fit(train);
 				log.error("*** Completed epoch {} ***", i);
 			}
-			long endTime = System.currentTimeMillis();
-			log.error("time: {}", endTime - startTime);
-
+			Controller.barrier(distInfo, "slave");
+			
 			if (distInfo.getRoleIdx() == 0) {
-				log.error("Evaluate model....");
+				long endTime = System.currentTimeMillis();
+				log.error("time: {}", endTime - startTime);
+				
+				network.pullParam();
+				log.error("Evaluate model.... {}", appConf.getNMaster() + "&" +  appConf.getNWorker());
 				Evaluation eval = new Evaluation();
 				while (test.hasNext()) {
 					DataSet ds = test.next();

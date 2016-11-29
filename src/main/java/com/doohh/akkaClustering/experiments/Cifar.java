@@ -21,7 +21,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,9 +120,6 @@ private static final Logger log = LoggerFactory.getLogger(Cifar.class);
         network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
 		long startTime = System.currentTimeMillis();
 		for (int i = 0; i < nEpochs; i++) {
-			network.fit(train);
-			network.fit(train);
-			network.fit(train);
 			network.fit(train);
 			log.error("*** Completed epoch {} ***", i);
 		}

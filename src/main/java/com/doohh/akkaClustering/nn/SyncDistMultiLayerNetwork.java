@@ -176,6 +176,7 @@ public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 			update(TaskUtils.buildTask(iter));
 			iter.reset();
 
+			int cnt = 0;
 			while (iter.hasNext()) {
 				pullParam();
 				Controller.barrier(distInfo, "slave");
@@ -210,9 +211,13 @@ public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 				// push & pull parameters from master
 				pushGrad();
 				Controller.barrier(distInfo, "slave");
+				cnt++;
 				}
-		}
-		pullParam();
+			// 동기를 맞추기 위해, Iteration을 다른 slave보다 덜 처리한 녀석은  그 차이만큼 Barrier()를 실행해준다.
+			Controller.barrier(distInfo, "slave", cnt);
+		}		
+
+		//pullParam(); main 문에서 pull한다.
 	}
 
 	private void update(Task task) {
@@ -274,7 +279,7 @@ public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 		}
 	}
 
-	private void pullParam() {
+	public void pullParam() {
 		int start, end;
 		int nParamServer = distInfo.getRouterInfo().getNParamServer();
 		RouterInfo routerInfo = distInfo.getRouterInfo();

@@ -80,67 +80,81 @@ public class CifarDistSyncEx {
 		distInfo = new DistInfo();
 		distInfo.init(appConf);
 
-		log.info("Load data....");
-		if (distInfo.getRole().equals("slave")) {
-			numExamples = distInfo.getNumExamples("DistMnistDataFetcher");
-			train = new DistCifarDataSetIterator(batchSize, numExamples, true, distInfo);
-			if (distInfo.getRoleIdx() == 0)
-				test = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TEST_IMAGES, false);
-
-			// setup the network
-			log.info("Build model....");
-			MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder().seed(seed)
-					.iterations(iterations).gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
-					.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).list()
-					.layer(0,
-							new ConvolutionLayer.Builder(5, 5).nIn(3).nOut(20).stride(1, 1)
-									.weightInit(WeightInit.XAVIER).activation("relu").build())
-					.layer(1,
-							new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
-									.build())
-					.layer(2,
-							new ConvolutionLayer.Builder(5, 5).nOut(50).stride(1, 1).weightInit(WeightInit.XAVIER)
-									.activation("relu").build())
-					.layer(3,
-							new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
-									.build())
-					.layer(4, new DenseLayer.Builder().activation("relu").nOut(384).build())
-					.layer(5, new DenseLayer.Builder().activation("relu").nOut(192).build())
-					.layer(6,
-							new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD).nOut(10)
-									.weightInit(WeightInit.XAVIER).activation("softmax").build())
-					.setInputType(InputType.convolutionalFlat(32, 32, 3)).backprop(true).pretrain(false);
-
-			MultiLayerConfiguration conf = builder.build();
-
-			SyncDistMultiLayerNetwork network = new SyncDistMultiLayerNetwork(conf, distInfo);
-			network.init();
-
-	        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
-			log.error("Train model....");
-			long startTime = System.currentTimeMillis();
-			for (int i = 0; i < nEpochs; i++) {
-				network.fit(train);
-				log.error("*** Completed epoch {} ***", i);
+		int iter = 10 ;
+		if (distInfo.getRole().equals("slave")){ 
+			if (distInfo.getRoleIdx() == 0){
+				iter++;
+				Controller.barrier(distInfo, "slave");
+				System.out.println("ifffffffffffff");
 			}
-			long endTime = System.currentTimeMillis();
-			log.error("time: {}", endTime - startTime);
-
-			if (distInfo.getRoleIdx() == 0) {
-				log.error("Evaluate model....");
-				Evaluation eval = new Evaluation();
-				while (test.hasNext()) {
-					DataSet ds = test.next();
-					INDArray output = network.output(ds.getFeatureMatrix(), false);
-					eval.eval(ds.getLabels(), output);
-				}
-				log.error(eval.stats());
-				log.error("****************Example finished********************");
-			}
-			Controller.barrier(distInfo, "slave");
-			if (distInfo.getRoleIdx() == 0)
-				network.finishApp(appConf);
+			Controller.barrier(distInfo, "slave", iter);
+			System.out.println("enddddddddddd");
 		}
+		
+//		log.info("Load data....");
+//		if (distInfo.getRole().equals("slave")) {
+//			numExamples = distInfo.getNumExamples("DistMnistDataFetcher");
+//			train = new DistCifarDataSetIterator(batchSize, numExamples, true, distInfo);
+//			if (distInfo.getRoleIdx() == 0)
+//				test = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TEST_IMAGES, false);
+//
+//			// setup the network
+//			log.info("Build model....");
+//			MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder().seed(seed)
+//					.iterations(iterations).gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
+//					.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).list()
+//					.layer(0,
+//							new ConvolutionLayer.Builder(5, 5).nIn(3).nOut(20).stride(1, 1)
+//									.weightInit(WeightInit.XAVIER).activation("relu").build())
+//					.layer(1,
+//							new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
+//									.build())
+//					.layer(2,
+//							new ConvolutionLayer.Builder(5, 5).nOut(50).stride(1, 1).weightInit(WeightInit.XAVIER)
+//									.activation("relu").build())
+//					.layer(3,
+//							new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
+//									.build())
+//					.layer(4, new DenseLayer.Builder().activation("relu").nOut(384).build())
+//					.layer(5, new DenseLayer.Builder().activation("relu").nOut(192).build())
+//					.layer(6,
+//							new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD).nOut(10)
+//									.weightInit(WeightInit.XAVIER).activation("softmax").build())
+//					.setInputType(InputType.convolutionalFlat(32, 32, 3)).backprop(true).pretrain(false);
+//
+//			MultiLayerConfiguration conf = builder.build();
+//
+//			SyncDistMultiLayerNetwork network = new SyncDistMultiLayerNetwork(conf, distInfo);
+//			network.init();
+//
+//	        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
+//			log.error("Train model....");
+//			long startTime = System.currentTimeMillis();
+//			for (int i = 0; i < nEpochs; i++) {
+//				network.fit(train);
+//				log.error("*** Completed epoch {} ***", i);
+//			}
+//			Controller.barrier(distInfo, "slave");
+//			
+//			if (distInfo.getRoleIdx() == 0) {
+//				long endTime = System.currentTimeMillis();
+//				log.error("time: {}", endTime - startTime);
+//				
+//				network.pullParam();
+//				log.error("Evaluate model.... {}", appConf.getNMaster() + "&" +  appConf.getNWorker());
+//				Evaluation eval = new Evaluation();
+//				while (test.hasNext()) {
+//					DataSet ds = test.next();
+//					INDArray output = network.output(ds.getFeatureMatrix(), false);
+//					eval.eval(ds.getLabels(), output);
+//				}
+//				log.error(eval.stats());
+//				log.error("****************Example finished********************");
+//			}
+//			Controller.barrier(distInfo, "slave");
+//			if (distInfo.getRoleIdx() == 0)
+//				network.finishApp(appConf);
+//		}
 	}
 
 	public static void main(AppConf appConf, String[] args) {

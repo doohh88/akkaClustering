@@ -125,11 +125,14 @@ public class LenetDistSyncEx {
 				model.fit(mnistTrain);
 				log.error("*** Completed epoch {} ***", i);
 			}
-			long endTime = System.currentTimeMillis();
-			log.error("time: {}", endTime - startTime);
-
+			Controller.barrier(distInfo, "slave");
+			
 			if (distInfo.getRoleIdx() == 0) {
-				log.error("Evaluate model....");
+				long endTime = System.currentTimeMillis();
+				log.error("time: {}", endTime - startTime);
+				
+				model.pullParam();
+				log.error("Evaluate model.... {}", appConf.getNMaster() + "&" +  appConf.getNWorker());
 				Evaluation eval = new Evaluation();
 				while (mnistTest.hasNext()) {
 					DataSet ds = mnistTest.next();

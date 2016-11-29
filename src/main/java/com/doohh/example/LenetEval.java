@@ -1,4 +1,4 @@
-package com.doohh.akkaClustering.experiments;
+package com.doohh.example;
 
 import java.io.IOException;
 
@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by agibsonccc on 9/16/15.
  */
-public class LenetMnist {
-	private static final Logger log = LoggerFactory.getLogger(LenetMnist.class);
+public class LenetEval {
+	private static final Logger log = LoggerFactory.getLogger(LenetEval.class);
 
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -113,26 +113,26 @@ public class LenetMnist {
 		for (int i = 0; i < nEpochs; i++) {
 			model.fit(mnistTrain);
 			log.error("*** Completed epoch {} ***", i);
+			
+			log.error("Evaluate model....");
+			Evaluation eval = new Evaluation();
+			mnistTest.reset();
+			while (mnistTest.hasNext()) {
+				DataSet ds = mnistTest.next();
+				INDArray output = model.output(ds.getFeatureMatrix(), false);
+				eval.eval(ds.getLabels(), output);
+			}
+			log.error(eval.stats());
 		}
 		long endTime = System.currentTimeMillis();
-		log.error("time: {}", endTime - startTime);
-
-		log.error("Evaluate model....");
-		Evaluation eval = new Evaluation();
-		mnistTest.reset();
-		while (mnistTest.hasNext()) {
-			DataSet ds = mnistTest.next();
-			INDArray output = model.output(ds.getFeatureMatrix(), false);
-			eval.eval(ds.getLabels(), output);
-		}
-		log.error(eval.stats());
+		log.error("time: {}", endTime - startTime);		
 		log.error("****************Example finished********************");
 	}
 
 	public static void main(String[] args) {
 		System.out.println("start...");
 		try {
-			new LenetMnist().run(args);
+			new LenetEval().run(args);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

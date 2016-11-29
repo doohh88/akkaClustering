@@ -34,18 +34,17 @@ public class SubmitMain {
 
 	public static void main(String[] args) {
 		// ****************************************************************************
-		//args = new String[11];
-//		args = new String[8];
-//		args[0] = "-m";
-//		args[1] = "2";
-//		args[2] = "-w";
-//		args[3] = "3";
-//		args[4] = "-j";
-//		args[5] = "C:/git/akkaClustering/jars/distDeep-core.jar";
-//		args[6] = "-c";
-//		args[7] = "example.test";
-//		args[8] = "args1";
-//		args[9] = "args2";
+		args = new String[10];
+		args[0] = "-m";
+		args[1] = "1";
+		args[2] = "-w";
+		args[3] = "4";
+		args[4] = "-j";
+		args[5] = "C:/git/akkaClustering/target/akkaClustering-0.0.1-allinone.jar";
+		args[6] = "-c";
+		args[7] = "com.doohh.akkaClustering.experiments.CifarDistSyncEx";
+		args[8] = "-l";
+		args[9] = "1";
 //		args[10] = "args3";
 		// ****************************************************************************
 

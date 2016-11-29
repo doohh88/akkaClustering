@@ -293,7 +293,7 @@ public class DistMultiLayerNetwork extends MultiLayerNetwork {
 		}
 	}
 	
-	private void pullParam() {
+	public void pullParam() {
 		int start, end;
 		int nParamServer = distInfo.getRouterInfo().getNParamServer();
 		RouterInfo routerInfo = distInfo.getRouterInfo();
