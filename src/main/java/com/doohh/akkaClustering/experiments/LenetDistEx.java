@@ -43,7 +43,7 @@ public class LenetDistEx {
 	int iterations = 1;
 	@Option(name = "--listenerFreq", usage = "listenerFreq", aliases = "-l")
 	int listenerFreq = 1;
-	private AppConf appConf;
+	//private AppConf appConf;
 
 	private void parseArgs(String[] args) {
 		CmdLineParser parser = new CmdLineParser(this);
@@ -138,7 +138,6 @@ public class LenetDistEx {
 				}
 				log.error(eval.stats());
 				log.error("****************Example finished********************");
-				model.finishApp(appConf);
 			}
 			Controller.barrier(distInfo, "slave");
 			if (distInfo.getRoleIdx() == 0)

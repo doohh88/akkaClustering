@@ -67,8 +67,8 @@ private static final Logger log = LoggerFactory.getLogger(Cifar.class);
 	    int splitTrainNum = (int) (batchSize*.8);
 	    int seed = 123;
 		
-	    DataSetIterator train = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TRAIN_IMAGES, true);
-	    DataSetIterator test = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TEST_IMAGES, false);
+	    CifarDataSetIterator train = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TRAIN_IMAGES, true);
+	    CifarDataSetIterator test = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TEST_IMAGES, false);
 
         
         //setup the network
@@ -119,21 +119,27 @@ private static final Logger log = LoggerFactory.getLogger(Cifar.class);
         
         log.error("Train model....");
         network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
-        for( int i=0; i<nEpochs; i++ ) {
-        	network.fit(train);
-            log.error("*** Completed epoch {} ***", i); 
+		long startTime = System.currentTimeMillis();
+		for (int i = 0; i < nEpochs; i++) {
+			network.fit(train);
+			network.fit(train);
+			network.fit(train);
+			network.fit(train);
+			log.error("*** Completed epoch {} ***", i);
+		}
+		long endTime = System.currentTimeMillis();
+		log.error("time: {}", endTime - startTime);
 
-            log.error("Evaluate model....");
-            Evaluation eval = new Evaluation();
-            test.reset();
-            while(test.hasNext()){
-                DataSet ds = test.next();
-                INDArray output = network.output(ds.getFeatureMatrix(), false);
-                eval.eval(ds.getLabels(), output);
-            }
-            log.error(eval.stats());
-        }
-        log.error("****************Example finished********************");
+		log.error("Evaluate model....");
+		Evaluation eval = new Evaluation();
+		test.reset();
+		while (test.hasNext()) {
+			DataSet ds = test.next();
+			INDArray output = network.output(ds.getFeatureMatrix(), false);
+			eval.eval(ds.getLabels(), output);
+		}
+		log.error(eval.stats());
+		log.error("****************Example finished********************");
 	}
 	
 	public static void main(String[] args) { 

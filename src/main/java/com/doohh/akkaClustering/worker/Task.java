@@ -7,7 +7,6 @@ import java.net.URLClassLoader;
 
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.Command;
-import com.doohh.example.LenetSyncDistEx;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -38,9 +37,11 @@ public class Task extends UntypedActor {
 
 				// *******************
 				// running application
-				//runApp(appConf);
-				 //new LenetDistEx().main(appConf, appConf.getArgs());
-				 new LenetSyncDistEx().main(appConf, appConf.getArgs());				 
+				runApp(appConf);
+				// new LenetDistEx().main(appConf, appConf.getArgs());
+				// new LenetSyncDistEx().main(appConf, appConf.getArgs());
+				//new CifarDistEx().main(appConf, appConf.getArgs());				
+				//new CifarDistSyncEx().main(appConf, appConf.getArgs());
 				// new DistTest().main(appConf, appConf.getArgs());
 				// *******************
 			}

@@ -1,4 +1,4 @@
-package com.doohh.example;
+package com.doohh.akkaClustering.experiments;
 
 import java.io.IOException;
 
@@ -32,8 +32,8 @@ import com.doohh.akkaClustering.nn.DistMnistDataSetIterator;
 import com.doohh.akkaClustering.nn.SyncDistMultiLayerNetwork;
 import com.doohh.akkaClustering.worker.Controller;
 
-public class LenetSyncDistEx {
-	private static final Logger log = LoggerFactory.getLogger(LenetSyncDistEx.class);
+public class LenetDistSyncEx {
+	private static final Logger log = LoggerFactory.getLogger(LenetDistSyncEx.class);
 
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -138,7 +138,6 @@ public class LenetSyncDistEx {
 				}
 				log.error(eval.stats());
 				log.error("****************Example finished********************");
-				model.finishApp(appConf);
 			}
 			Controller.barrier(distInfo, "slave");
 			if (distInfo.getRoleIdx() == 0)
@@ -149,7 +148,7 @@ public class LenetSyncDistEx {
 	public static void main(AppConf appConf, String[] args) {
 		System.out.println("start...");
 		try {
-			new LenetSyncDistEx().run(appConf, args);
+			new LenetDistSyncEx().run(appConf, args);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

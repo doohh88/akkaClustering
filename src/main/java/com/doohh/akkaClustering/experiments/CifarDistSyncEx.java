@@ -1,13 +1,12 @@
 package com.doohh.akkaClustering.experiments;
 
-import java.io.IOException;
-
-import org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator;
+import org.datavec.image.loader.CifarLoader;
+import org.deeplearning4j.datasets.iterator.impl.CifarDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
+import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -28,12 +27,12 @@ import org.slf4j.LoggerFactory;
 
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.DistInfo;
-import com.doohh.akkaClustering.nn.DistMnistDataSetIterator;
+import com.doohh.akkaClustering.nn.DistCifarDataSetIterator;
 import com.doohh.akkaClustering.nn.SyncDistMultiLayerNetwork;
 import com.doohh.akkaClustering.worker.Controller;
 
-public class LenetSyncDistEx {
-	private static final Logger log = LoggerFactory.getLogger(LenetSyncDistEx.class);
+public class CifarDistSyncEx {
+	private static final Logger log = LoggerFactory.getLogger(CifarDistSyncEx.class);
 
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -43,7 +42,10 @@ public class LenetSyncDistEx {
 	int iterations = 1;
 	@Option(name = "--listenerFreq", usage = "listenerFreq", aliases = "-l")
 	int listenerFreq = 1;
-	private AppConf appConf;
+	@Option(name = "--numTrain", usage = "numTrain", aliases = "-tr")
+	int numTrain = CifarLoader.NUM_TRAIN_IMAGES;
+	@Option(name = "--numTest", usage = "numTest", aliases = "-te")
+	int numTest = CifarLoader.NUM_TEST_IMAGES;
 
 	private void parseArgs(String[] args) {
 		CmdLineParser parser = new CmdLineParser(this);
@@ -60,20 +62,20 @@ public class LenetSyncDistEx {
 
 	}
 
-	void run(AppConf appConf, String[] args) throws IOException {
+	void run(AppConf appConf, String[] args) {
+		// TODO Auto-generated method stub
 		this.parseArgs(args);
 
-		int nChannels = 1; // Number of input channels
-		int outputNum = 10; // The number of possible outcomes
-		int seed = 123; //
+		int nChannels = 3;
+		int outputNum = 10;
+		int splitTrainNum = (int) (batchSize * .8);
+		int seed = 123;
 		int numExamples = 0;
+		int initCursor = 0;
 		DistInfo distInfo = null;
-		DataSetIterator mnistTrain = null;
-		DataSetIterator mnistTest = null;
+		DistCifarDataSetIterator train = null;
+		CifarDataSetIterator test = null;
 
-		/*
-		 * Create an iterator using the batch size for one iteration
-		 */
 		log.info("Load distInfo....");
 		distInfo = new DistInfo();
 		distInfo.init(appConf);
@@ -81,48 +83,44 @@ public class LenetSyncDistEx {
 		log.info("Load data....");
 		if (distInfo.getRole().equals("slave")) {
 			numExamples = distInfo.getNumExamples("DistMnistDataFetcher");
-			mnistTrain = new DistMnistDataSetIterator(batchSize, numExamples, false, true, true, 12345, distInfo);
+			train = new DistCifarDataSetIterator(batchSize, numExamples, true, distInfo);
 			if (distInfo.getRoleIdx() == 0)
-				mnistTest = new MnistDataSetIterator(batchSize, false, 12345);
+				test = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TEST_IMAGES, false);
 
-			/*
-			 * Construct the neural network
-			 */
+			// setup the network
 			log.info("Build model....");
 			MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder().seed(seed)
-					.iterations(iterations).regularization(true).l2(0.0005)
-					/*
-					 * Uncomment the following for learning decay and bias
-					 */
-					.learningRate(.01)// .biasLearningRate(0.02)
-					// .learningRateDecayPolicy(LearningRatePolicy.Inverse).lrPolicyDecayRate(0.001).lrPolicyPower(0.75)
-					.weightInit(WeightInit.XAVIER).optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-					.updater(Updater.NESTEROVS).momentum(0.9).list()
+					.iterations(iterations).gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
+					.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT).list()
 					.layer(0,
-							new ConvolutionLayer.Builder(5, 5).nIn(nChannels).stride(1, 1).nOut(20)
-									.activation("identity").build())
+							new ConvolutionLayer.Builder(5, 5).nIn(3).nOut(20).stride(1, 1)
+									.weightInit(WeightInit.XAVIER).activation("relu").build())
 					.layer(1,
 							new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
 									.build())
-					.layer(2, new ConvolutionLayer.Builder(5, 5).stride(1, 1).nOut(50).activation("identity").build())
+					.layer(2,
+							new ConvolutionLayer.Builder(5, 5).nOut(50).stride(1, 1).weightInit(WeightInit.XAVIER)
+									.activation("relu").build())
 					.layer(3,
 							new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX).kernelSize(2, 2).stride(2, 2)
 									.build())
-					.layer(4, new DenseLayer.Builder().activation("relu").nOut(500).build())
-					.layer(5,
-							new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD).nOut(outputNum)
-									.activation("softmax").build())
-					.setInputType(InputType.convolutionalFlat(28, 28, 1)).backprop(true).pretrain(false);
+					.layer(4, new DenseLayer.Builder().activation("relu").nOut(384).build())
+					.layer(5, new DenseLayer.Builder().activation("relu").nOut(192).build())
+					.layer(6,
+							new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD).nOut(10)
+									.weightInit(WeightInit.XAVIER).activation("softmax").build())
+					.setInputType(InputType.convolutionalFlat(32, 32, 3)).backprop(true).pretrain(false);
 
 			MultiLayerConfiguration conf = builder.build();
-			SyncDistMultiLayerNetwork model = new SyncDistMultiLayerNetwork(conf, distInfo);
-			model.init();
-			model.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
 
+			SyncDistMultiLayerNetwork network = new SyncDistMultiLayerNetwork(conf, distInfo);
+			network.init();
+
+	        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
 			log.error("Train model....");
 			long startTime = System.currentTimeMillis();
 			for (int i = 0; i < nEpochs; i++) {
-				model.fit(mnistTrain);
+				network.fit(train);
 				log.error("*** Completed epoch {} ***", i);
 			}
 			long endTime = System.currentTimeMillis();
@@ -131,28 +129,23 @@ public class LenetSyncDistEx {
 			if (distInfo.getRoleIdx() == 0) {
 				log.error("Evaluate model....");
 				Evaluation eval = new Evaluation();
-				while (mnistTest.hasNext()) {
-					DataSet ds = mnistTest.next();
-					INDArray output = model.output(ds.getFeatureMatrix(), false);
+				while (test.hasNext()) {
+					DataSet ds = test.next();
+					INDArray output = network.output(ds.getFeatureMatrix(), false);
 					eval.eval(ds.getLabels(), output);
 				}
 				log.error(eval.stats());
 				log.error("****************Example finished********************");
-				model.finishApp(appConf);
 			}
 			Controller.barrier(distInfo, "slave");
 			if (distInfo.getRoleIdx() == 0)
-				model.finishApp(appConf);
+				network.finishApp(appConf);
 		}
 	}
 
 	public static void main(AppConf appConf, String[] args) {
 		System.out.println("start...");
-		try {
-			new LenetSyncDistEx().run(appConf, args);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		new CifarDistSyncEx().run(appConf, args);
 		System.out.println("finish...");
 	}
 }
