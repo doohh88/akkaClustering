@@ -20,6 +20,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +28,11 @@ import org.slf4j.LoggerFactory;
 import com.doohh.akkaClustering.dto.AppConf;
 import com.doohh.akkaClustering.dto.DistInfo;
 import com.doohh.akkaClustering.nn.DistCifarDataSetIterator;
-import com.doohh.akkaClustering.nn.SyncDistMultiLayerNetwork;
+import com.doohh.akkaClustering.nn.DistMultiLayerNetwork;
 import com.doohh.akkaClustering.worker.Controller;
 
-public class CifarDistSyncEx {
-	private static final Logger log = LoggerFactory.getLogger(CifarDistSyncEx.class);
+public class CifarDistEval {
+	private static final Logger log = LoggerFactory.getLogger(CifarDistEval.class);
 
 	@Option(name = "--batchSize", usage = "batchSize", aliases = "-b")
 	int batchSize = 128;
@@ -78,14 +79,14 @@ public class CifarDistSyncEx {
 		log.info("Load distInfo....");
 		distInfo = new DistInfo();
 		distInfo.init(appConf);
-		
+
 		log.info("Load data....");
 		if (distInfo.getRole().equals("slave")) {
 			numExamples = distInfo.getNumExamples("DistMnistDataFetcher");
 			train = new DistCifarDataSetIterator(batchSize, numExamples, true, distInfo);
-//			if (distInfo.getRoleIdx() == 0)
+			if (distInfo.getRoleIdx() == 0)
 				test = new CifarDataSetIterator(batchSize, CifarLoader.NUM_TEST_IMAGES, false);
-			
+
 			// setup the network
 			log.info("Build model....");
 			MultiLayerConfiguration.Builder builder = new NeuralNetConfiguration.Builder().seed(seed)
@@ -112,26 +113,35 @@ public class CifarDistSyncEx {
 
 			MultiLayerConfiguration conf = builder.build();
 
-			SyncDistMultiLayerNetwork network = new SyncDistMultiLayerNetwork(conf, distInfo);
+			DistMultiLayerNetwork network = new DistMultiLayerNetwork(conf, distInfo);
 			network.init();
 
 	        network.setListeners(new ScoreIterationListener(listenerFreq), new PerformanceListener(listenerFreq));
-			log.error("Train model....");
+	        log.error("Train model....");
 			long startTime = System.currentTimeMillis();
 			for (int i = 0; i < nEpochs; i++) {
 				network.fit(train);
 				log.error("*** Completed epoch {} ***", i);
+				train.reset();
+				
+				log.error("Evaluate model.... {}", appConf.getNMaster() + "&" +  appConf.getNWorker());
+				Evaluation eval = new Evaluation();
+				while (test.hasNext()) {
+					DataSet ds = test.next();
+					INDArray output = network.output(ds.getFeatureMatrix(), false);
+					eval.eval(ds.getLabels(), output);
+				}
+				log.error(eval.stats());
 			}
 			Controller.barrier(distInfo, "slave");
 			
-			//if (distInfo.getRoleIdx() == 0) {
+			if (distInfo.getRoleIdx() == 0) {
 				long endTime = System.currentTimeMillis();
 				log.error("time: {}", endTime - startTime);
 				
 				network.pullParam();
 				log.error("Evaluate model.... {}", appConf.getNMaster() + "&" +  appConf.getNWorker());
 				Evaluation eval = new Evaluation();
-				//System.out.println("¿©±â´Â?");
 				while (test.hasNext()) {
 					DataSet ds = test.next();
 					INDArray output = network.output(ds.getFeatureMatrix(), false);
@@ -139,7 +149,8 @@ public class CifarDistSyncEx {
 				}
 				log.error(eval.stats());
 				log.error("****************Example finished********************");
-			//}
+			}
+			
 			Controller.barrier(distInfo, "slave");
 			if (distInfo.getRoleIdx() == 0)
 				network.finishApp(appConf);
@@ -148,20 +159,7 @@ public class CifarDistSyncEx {
 
 	public static void main(AppConf appConf, String[] args) {
 		System.out.println("start...");
-		new CifarDistSyncEx().run(appConf, args);
+		new CifarDistEval().run(appConf, args);
 		System.out.println("finish...");
 	}
 }
-
-
-
-//boolean hasNext = true;
-//if (distInfo.getRole().equals("slave")){ 
-//	if (distInfo.getRoleIdx() == 0){
-//		hasNext = false;
-//		System.out.println("ifffffffffffff");
-//	}
-//	System.out.println(distInfo.getRoleIdx() + "'hasNext: " + hasNext);
-//	Controller.barrier(distInfo, "slave", hasNext);
-//	System.out.println("enddddddddddd");
-//}

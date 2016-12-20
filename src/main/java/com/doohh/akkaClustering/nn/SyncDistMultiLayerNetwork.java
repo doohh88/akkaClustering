@@ -176,11 +176,14 @@ public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 			update(TaskUtils.buildTask(iter));
 			iter.reset();
 
-			int cnt = 0;
-			while (iter.hasNext()) {
+			
+			int iteration =0;
+			boolean hasNext = false;
+			boolean escape = false;			
+			while (hasNext = iter.hasNext()) {
 				pullParam();
 				Controller.barrier(distInfo, "slave");
-				
+
 				DataSet next = iter.next();
 				if (next.getFeatureMatrix() == null || next.getLabels() == null)
 					break;
@@ -210,14 +213,21 @@ public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 
 				// push & pull parameters from master
 				pushGrad();
-				Controller.barrier(distInfo, "slave");
-				cnt++;
-				}
-			// 동기를 맞추기 위해, Iteration을 다른 slave보다 덜 처리한 녀석은  그 차이만큼 Barrier()를 실행해준다.
-			Controller.barrier(distInfo, "slave", cnt);
-		}		
 
-		//pullParam(); main 문에서 pull한다.
+				//Synch
+				//System.out.println(distInfo.getRoleIdx() + "'iteration: " + iteration++);
+				if (escape = Controller.barrier(distInfo, "slave", hasNext)){
+					System.out.println(distInfo.getRoleIdx() + "'escape!!");
+					break;					
+				}
+			}
+
+			// 동기를 맞추기 위해, Iteration을 다른 slave보다 덜 처리한 녀석은 그 차이만큼 Barrier()를
+			// 실행해준다.
+			// Controller.barrier(distInfo, "slave", cnt);
+		}
+
+		// pullParam(); main 문에서 pull한다.
 	}
 
 	private void update(Task task) {
@@ -300,7 +310,7 @@ public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 		}
 
 	}
-	
+
 	private void pushGrad() {
 		INDArray gradient;
 		int start, end;
@@ -322,8 +332,8 @@ public class SyncDistMultiLayerNetwork extends MultiLayerNetwork {
 			}
 		}
 	}
-	
-	public void finishApp(AppConf appConf){
+
+	public void finishApp(AppConf appConf) {
 		ActorSelection controller = distInfo.getController();
 		controller.tell(new Command().setCommand("finishApp()").setData(appConf), ActorRef.noSender());
 	}

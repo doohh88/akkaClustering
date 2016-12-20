@@ -1,7 +1,8 @@
 package com.doohh.akkaClustering.master;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.doohh.akkaClustering.dto.AppConf;
@@ -18,7 +19,8 @@ import akka.routing.RoundRobinGroup;
 
 public class ResourceMngr extends UntypedActor {
 	LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-	private Hashtable<Address, Node> workers = new Hashtable<Address, Node>();
+	//private Hashtable<Address, Node> workers = new Hashtable<Address, Node>();
+	private LinkedHashMap<Address, Node> workers = new LinkedHashMap<Address, Node>();
 
 	@Override
 	public void onReceive(Object message) throws Throwable {

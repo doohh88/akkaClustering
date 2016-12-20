@@ -8,7 +8,7 @@ public class Main {
 	public static void main(String[] m_args) {
 		int nWorker = 5;
 		MasterMain.main(m_args);
-		for (int i = 0; i < nWorker; i++)
+		 for (int i = 0; i < nWorker; i++)
 			new WorkerMain().main(m_args);
 		
 		// ****************************************************************************

@@ -27,24 +27,26 @@ public class SubmitMain {
 	public static String jarPath = null;
 	@Option(name = "--ss", usage = "classPath", aliases = "-c")
 	public static String classPath = null;
-	@Option(name = "--master", usage = "master", aliases = "-m")
+	@Option(name = "--maste r", usage = "master", aliases = "-m")
 	public static int nMaster = 1;
 	@Option(name = "--worker", usage = "worker", aliases = "-w")
 	public static int nWorker = 1;
 
 	public static void main(String[] args) {
 		// ****************************************************************************
-		args = new String[10];
-		args[0] = "-m";
-		args[1] = "1";
-		args[2] = "-w";
-		args[3] = "4";
-		args[4] = "-j";
-		args[5] = "C:/git/akkaClustering/target/akkaClustering-0.0.1-allinone.jar";
-		args[6] = "-c";
-		args[7] = "com.doohh.akkaClustering.experiments.CifarDistSyncEx";
-		args[8] = "-l";
-		args[9] = "1";
+//		args = new String[12];
+//		args[0] = "-m";
+//		args[1] = "1";
+//		args[2] = "-w";
+//		args[3] = "4";
+//		args[4] = "-j";
+//		args[5] = "C:/git/akkaClustering/target/akkaClustering-0.0.1-allinone.jar";
+//		args[6] = "-c";
+//		args[7] = "com.doohh.akkaClustering.experiments.CifarDistEval";
+//		args[8] = "-e";
+//		args[9] = "5";
+//		args[10] = "-l";
+//		args[11] = "10";
 //		args[10] = "args3";
 		// ****************************************************************************
 

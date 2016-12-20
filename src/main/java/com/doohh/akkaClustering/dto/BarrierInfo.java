@@ -15,11 +15,19 @@ public class BarrierInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	int barrierNum;
-	int iteration;
-	DistInfo distInfo;
-	public BarrierInfo(DistInfo distInfo, int barrierNum, int iteration) {
-		this.distInfo = distInfo;
+	boolean hasNext;
+
+	public BarrierInfo(int barrierNum, boolean hasNext) {
 		this.barrierNum = barrierNum;
-		this.iteration = iteration;
+		this.hasNext = hasNext;
 	}
 }
+
+
+//int iteration;	
+//DistInfo distInfo;
+//public BarrierInfo(DistInfo distInfo, int barrierNum, int iteration) {
+//	//this.distInfo = distInfo;
+//	this.barrierNum = barrierNum;
+//	this.iteration = iteration;
+//}
